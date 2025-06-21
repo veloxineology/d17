@@ -171,14 +171,34 @@ export class SoundEngine {
     })
   }
 
+  // Helper function to validate and clean note format
+  private validateNote(note: string): string {
+    // Remove any invalid characters and ensure proper format
+    const cleanNote = note.replace(/[^A-G#b0-9]/g, "")
+
+    // Check if it's a valid note format (letter + optional sharp/flat + number)
+    const noteRegex = /^([A-G][#b]?)([0-9])$/
+    const match = cleanNote.match(noteRegex)
+
+    if (!match) {
+      console.warn(`Invalid note format: ${note}, using C4 as fallback`)
+      return "C4"
+    }
+
+    return cleanNote
+  }
+
   // Helper function to convert note format
   private convertNoteFormat(note: string): string {
+    // First validate and clean the note
+    const validNote = this.validateNote(note)
+
     // Convert from various formats to standard Tone.js format
-    if (note.includes("s")) {
+    if (validNote.includes("s")) {
       // Convert Ds4 to D#4, Fs4 to F#4, etc.
-      return note.replace("s", "#")
+      return validNote.replace("s", "#")
     }
-    return note
+    return validNote
   }
 
   pressNote(note: string, velocity = 0.8): void {
@@ -190,8 +210,9 @@ export class SoundEngine {
         Tone.start()
       }
 
-      // Convert note to standard format
+      // Convert and validate note to standard format
       const standardNote = this.convertNoteFormat(note)
+      console.log(`Playing note: ${note} -> ${standardNote}`)
 
       this.sampler.triggerAttack(standardNote, undefined, velocity)
 
@@ -207,7 +228,7 @@ export class SoundEngine {
     if (!this.sampler || !this.isLoaded) return
 
     try {
-      // Convert note to standard format
+      // Convert and validate note to standard format
       const standardNote = this.convertNoteFormat(note)
 
       if (!this.sustainPedal || !this.sustainedNotes.has(standardNote)) {
