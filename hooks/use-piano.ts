@@ -20,6 +20,25 @@ export function usePiano() {
   const animationFrameRef = useRef<number>()
   const scheduledEvents = useRef<Array<{ timeout: NodeJS.Timeout; type: string; note: string }>>([])
 
+  // Helper function to fix note format
+  const fixNoteFormat = useCallback((noteName: string, octave: number): string => {
+    // Handle cases where note name might have extra characters
+    let cleanNoteName = noteName.replace(/[^A-G#b]/g, "") // Remove any non-note characters
+
+    // Ensure we have a valid note name
+    if (!cleanNoteName || cleanNoteName.length === 0) {
+      console.warn("Invalid note name:", noteName, "using C as fallback")
+      cleanNoteName = "C"
+    }
+
+    // Ensure octave is a single digit
+    const cleanOctave = Math.max(0, Math.min(8, Math.floor(octave)))
+
+    const result = `${cleanNoteName}${cleanOctave}`
+    console.log(`Fixed note format: ${noteName}${octave} -> ${result}`)
+    return result
+  }, [])
+
   // Initialize sound engine
   useEffect(() => {
     const engine = new SoundEngine({ volume })
@@ -110,6 +129,7 @@ export function usePiano() {
               time: n.time,
               duration: n.duration,
               velocity: n.velocity,
+              midi: n.midi,
             })),
           )
         }
@@ -181,19 +201,23 @@ export function usePiano() {
         duration: number
         note: string
         velocity: number
+        originalNote: string
       }> = []
 
       midiFile.tracks.forEach((track, trackIndex) => {
         if (track.notes && track.notes.length > 0) {
           console.log(`Processing track ${trackIndex} with ${track.notes.length} notes`)
           track.notes.forEach((note) => {
-            // Convert MIDI note to our format
-            const noteName = `${note.name}${note.octave}`
+            // Fix the note format properly
+            const originalNoteName = `${note.name}${note.octave}`
+            const fixedNoteName = fixNoteFormat(note.name, note.octave)
+
             allNotes.push({
               time: note.time,
               duration: note.duration,
-              note: noteName,
+              note: fixedNoteName,
               velocity: note.velocity,
+              originalNote: originalNoteName,
             })
           })
         }
@@ -204,6 +228,12 @@ export function usePiano() {
         console.warn("No notes found in MIDI file!")
         return
       }
+
+      // Show some example note conversions
+      console.log("Note format examples:")
+      allNotes.slice(0, 5).forEach((note) => {
+        console.log(`  ${note.originalNote} -> ${note.note}`)
+      })
 
       // Sort notes by time
       allNotes.sort((a, b) => a.time - b.time)
@@ -221,7 +251,9 @@ export function usePiano() {
 
         // Schedule note on
         const noteOnTimeout = setTimeout(() => {
-          console.log(`🎵 Playing note: ${noteEvent.note} at time ${noteEvent.time}s (velocity: ${noteEvent.velocity})`)
+          console.log(
+            `🎵 Playing note: ${noteEvent.note} (was ${noteEvent.originalNote}) at time ${noteEvent.time}s (velocity: ${noteEvent.velocity})`,
+          )
           pressNote(noteEvent.note, noteEvent.velocity)
         }, startDelay)
 
@@ -258,7 +290,17 @@ export function usePiano() {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
     }
-  }, [midiFile, soundEngine, isPlaying, duration, pressNote, releaseNote, clearScheduledEvents, updateCurrentTime])
+  }, [
+    midiFile,
+    soundEngine,
+    isPlaying,
+    duration,
+    pressNote,
+    releaseNote,
+    clearScheduledEvents,
+    updateCurrentTime,
+    fixNoteFormat,
+  ])
 
   // Pause MIDI
   const pauseMidi = useCallback(() => {
