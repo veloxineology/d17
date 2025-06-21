@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Play, Pause, Square, Upload, Volume2, Settings, TestTube } from "lucide-react"
 import PianoKeyboard from "@/components/piano-keyboard"
 import MidiPlayer from "@/components/midi-player"
+import SampleMidis from "@/components/sample-midis"
 import { usePiano } from "@/hooks/use-piano"
 
 export default function PianoApp() {
@@ -35,12 +36,19 @@ export default function PianoApp() {
   } = usePiano()
 
   const [selectedOctave, setSelectedOctave] = useState(4)
+  const [currentMidiName, setCurrentMidiName] = useState<string>()
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file && (file.name.endsWith(".mid") || file.name.endsWith(".midi"))) {
       loadMidiFile(file)
+      setCurrentMidiName(file.name)
     }
+  }
+
+  const handleSampleLoad = (file: File) => {
+    loadMidiFile(file)
+    setCurrentMidiName(file.name)
   }
 
   const testSound = () => {
@@ -163,6 +171,9 @@ export default function PianoApp() {
           </CardContent>
         </Card>
 
+        {/* Sample MIDIs by Kaushik */}
+        <SampleMidis onLoadMidi={handleSampleLoad} isCurrentlyPlaying={isPlaying} currentMidiName={currentMidiName} />
+
         {/* MIDI Player */}
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
@@ -171,7 +182,7 @@ export default function PianoApp() {
           <CardContent className="space-y-4">
             {/* File Upload */}
             <div className="space-y-2">
-              <Label className="text-white">Upload MIDI File</Label>
+              <Label className="text-white">Upload Your Own MIDI File</Label>
               <div className="flex gap-2">
                 <Input
                   type="file"
@@ -188,7 +199,7 @@ export default function PianoApp() {
             {/* Playback Controls */}
             {midiFile && (
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <Button onClick={playMidi} disabled={isPlaying} className="bg-green-600 hover:bg-green-700">
                     <Play className="w-4 h-4 mr-2" />
                     Play
@@ -201,9 +212,14 @@ export default function PianoApp() {
                     <Square className="w-4 h-4 mr-2" />
                     Stop
                   </Button>
+                  {currentMidiName && (
+                    <div className="text-slate-300 text-sm ml-4">
+                      <strong>Now Playing:</strong> {currentMidiName.replace(/\.(mid|midi)$/i, "")}
+                    </div>
+                  )}
                 </div>
 
-                {/* Progress Bar - WITH DEBUGGING */}
+                {/* Progress Bar */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-slate-300">
                     <span>
@@ -269,7 +285,7 @@ export default function PianoApp() {
               <strong>Sustain:</strong> Hold Space bar or toggle sustain pedal
             </p>
             <p>
-              <strong>MIDI:</strong> Upload .mid files to play along with visual feedback
+              <strong>MIDI:</strong> Upload .mid files or try the sample pieces below
             </p>
             <p>
               <strong>Scroll:</strong> Use mouse wheel or drag to scroll through octaves
