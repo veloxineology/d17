@@ -17,26 +17,19 @@ export function usePiano() {
   const [duration, setDuration] = useState(0)
 
   const playbackStartTime = useRef<number>(0)
-  const playbackOffset = useRef<number>(0) // For pause/resume
-  const animationFrameRef = useRef<number>()
+  const playbackOffset = useRef<number>(0)
+  const intervalRef = useRef<NodeJS.Timeout>()
   const scheduledEvents = useRef<Array<{ timeout: NodeJS.Timeout; type: string; note: string; time: number }>>([])
 
   // Helper function to fix note format
   const fixNoteFormat = useCallback((noteName: string, octave: number): string => {
-    // Handle cases where note name might have extra characters
-    let cleanNoteName = noteName.replace(/[^A-G#b]/g, "") // Remove any non-note characters
-
-    // Ensure we have a valid note name
+    let cleanNoteName = noteName.replace(/[^A-G#b]/g, "")
     if (!cleanNoteName || cleanNoteName.length === 0) {
       console.warn("Invalid note name:", noteName, "using C as fallback")
       cleanNoteName = "C"
     }
-
-    // Ensure octave is a single digit
     const cleanOctave = Math.max(0, Math.min(8, Math.floor(octave)))
-
-    const result = `${cleanNoteName}${cleanOctave}`
-    return result
+    return `${cleanNoteName}${cleanOctave}`
   }, [])
 
   // Initialize sound engine
@@ -74,11 +67,7 @@ export function usePiano() {
   // Press note
   const pressNote = useCallback(
     (note: string, velocity = 0.8) => {
-      if (!soundEngine) {
-        console.warn("Sound engine not available for note:", note)
-        return
-      }
-
+      if (!soundEngine) return
       soundEngine.pressNote(note, velocity)
       setActiveNotes((prev) => new Set(prev).add(note))
     },
@@ -88,11 +77,7 @@ export function usePiano() {
   // Release note
   const releaseNote = useCallback(
     (note: string) => {
-      if (!soundEngine) {
-        console.warn("Sound engine not available for releasing note:", note)
-        return
-      }
-
+      if (!soundEngine) return
       soundEngine.releaseNote(note)
       setActiveNotes((prev) => {
         const newSet = new Set(prev)
@@ -113,24 +98,7 @@ export function usePiano() {
       setCurrentTime(0)
       playbackOffset.current = 0
       console.log("MIDI file loaded:", midi)
-      console.log("Tracks:", midi.tracks.length)
       console.log("Duration:", midi.duration)
-
-      // Log track info with note details
-      midi.tracks.forEach((track, index) => {
-        console.log(`Track ${index}:`, track.notes?.length || 0, "notes")
-        if (track.notes && track.notes.length > 0) {
-          console.log(
-            "First few notes:",
-            track.notes.slice(0, 3).map((n) => ({
-              name: n.name,
-              octave: n.octave,
-              time: n.time,
-              duration: n.duration,
-            })),
-          )
-        }
-      })
     } catch (error) {
       console.error("Error loading MIDI file:", error)
     }
@@ -142,42 +110,48 @@ export function usePiano() {
     scheduledEvents.current.forEach(({ timeout, note, type }) => {
       clearTimeout(timeout)
       if (type === "noteOn") {
-        // Release any notes that were scheduled to play
         releaseNote(note)
       }
     })
     scheduledEvents.current = []
 
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = undefined
     }
 
-    setActiveNotes(new Set()) // Clear all active notes
+    setActiveNotes(new Set())
   }, [releaseNote])
 
-  // Update current time during playback - FIXED VERSION
-  const updateCurrentTime = useCallback(() => {
-    if (isPlaying && playbackStartTime.current > 0) {
-      const elapsed = (Date.now() - playbackStartTime.current) / 1000
-      const totalTime = playbackOffset.current + elapsed
-
-      // Force update the current time state
-      setCurrentTime(totalTime)
-
-      if (totalTime < duration) {
-        animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
-      } else {
-        // Playback finished
-        console.log("Playback finished")
-        setIsPlaying(false)
-        setCurrentTime(duration) // Set to end
-        playbackOffset.current = 0
-        clearScheduledEvents()
-      }
+  // FIXED: Use setInterval instead of requestAnimationFrame for more reliable updates
+  const startTimeTracking = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
     }
-  }, [isPlaying, duration, clearScheduledEvents])
 
-  // Play MIDI - FIXED VERSION
+    intervalRef.current = setInterval(() => {
+      if (playbackStartTime.current > 0) {
+        const elapsed = (Date.now() - playbackStartTime.current) / 1000
+        const totalTime = playbackOffset.current + elapsed
+
+        console.log(
+          `Time update: elapsed=${elapsed.toFixed(2)}, totalTime=${totalTime.toFixed(2)}, duration=${duration.toFixed(2)}`,
+        )
+
+        setCurrentTime(totalTime)
+
+        if (totalTime >= duration) {
+          console.log("Playback finished")
+          setIsPlaying(false)
+          setCurrentTime(duration)
+          playbackOffset.current = 0
+          clearScheduledEvents()
+        }
+      }
+    }, 50) // Update every 50ms for smooth progress
+  }, [duration, clearScheduledEvents])
+
+  // Play MIDI - COMPLETELY REWRITTEN
   const playMidi = useCallback(async () => {
     if (!midiFile || !soundEngine || isPlaying) {
       console.warn("Cannot start playback:", { midiFile: !!midiFile, soundEngine: !!soundEngine, isPlaying })
@@ -185,13 +159,12 @@ export function usePiano() {
     }
 
     try {
-      // Ensure Tone.js context is started
       if (Tone.context.state !== "running") {
         await Tone.start()
         console.log("Tone.js context started")
       }
 
-      console.log("Starting MIDI playback from time:", playbackOffset.current)
+      console.log("🎵 Starting MIDI playback from time:", playbackOffset.current)
 
       // Clear any existing scheduled events
       clearScheduledEvents()
@@ -202,67 +175,61 @@ export function usePiano() {
         duration: number
         note: string
         velocity: number
-        originalNote: string
       }> = []
 
-      midiFile.tracks.forEach((track, trackIndex) => {
+      midiFile.tracks.forEach((track) => {
         if (track.notes && track.notes.length > 0) {
           track.notes.forEach((note) => {
-            // Only include notes that haven't been played yet
             if (note.time >= playbackOffset.current) {
-              const originalNoteName = `${note.name}${note.octave}`
               const fixedNoteName = fixNoteFormat(note.name, note.octave)
-
               allNotes.push({
                 time: note.time,
                 duration: note.duration,
                 note: fixedNoteName,
                 velocity: note.velocity,
-                originalNote: originalNoteName,
               })
             }
           })
         }
       })
 
-      console.log("Notes to play from current position:", allNotes.length)
+      console.log("Notes to play:", allNotes.length)
       if (allNotes.length === 0) {
         console.warn("No more notes to play!")
         return
       }
 
-      // Sort notes by time
       allNotes.sort((a, b) => a.time - b.time)
 
-      // CRITICAL: Start playback timing BEFORE setting isPlaying
+      // CRITICAL: Set timing and state in the right order
       playbackStartTime.current = Date.now()
       setIsPlaying(true)
 
-      // Immediately start the time update loop
-      animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
+      // Start time tracking IMMEDIATELY
+      startTimeTracking()
 
-      // Schedule all note events relative to current playback position
+      console.log("✅ Playback started at:", new Date(playbackStartTime.current).toISOString())
+      console.log("✅ Time tracking started")
+
+      // Schedule note events
       let scheduledCount = 0
-      allNotes.forEach((noteEvent, index) => {
-        const startDelay = (noteEvent.time - playbackOffset.current) * 1000 // Convert to milliseconds
+      allNotes.forEach((noteEvent) => {
+        const startDelay = (noteEvent.time - playbackOffset.current) * 1000
         const endDelay = (noteEvent.time + noteEvent.duration - playbackOffset.current) * 1000
 
         if (startDelay >= 0) {
-          // Schedule note on
           const noteOnTimeout = setTimeout(() => {
             console.log(`🎵 Playing: ${noteEvent.note} at ${noteEvent.time.toFixed(2)}s`)
             pressNote(noteEvent.note, noteEvent.velocity)
           }, startDelay)
 
-          // Schedule note off
           const noteOffTimeout = setTimeout(
             () => {
               releaseNote(noteEvent.note)
             },
             Math.max(endDelay, startDelay + 100),
-          ) // Minimum 100ms note duration
+          )
 
-          // Store scheduled events
           scheduledEvents.current.push(
             { timeout: noteOnTimeout, type: "noteOn", note: noteEvent.note, time: noteEvent.time },
             {
@@ -276,22 +243,28 @@ export function usePiano() {
         }
       })
 
-      console.log(`✅ Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
-      console.log("Playback started at:", new Date(playbackStartTime.current).toISOString())
+      console.log(`✅ Scheduled ${scheduledCount} events`)
     } catch (error) {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
     }
-  }, [midiFile, soundEngine, isPlaying, pressNote, releaseNote, clearScheduledEvents, fixNoteFormat, updateCurrentTime])
+  }, [
+    midiFile,
+    soundEngine,
+    isPlaying,
+    duration,
+    pressNote,
+    releaseNote,
+    clearScheduledEvents,
+    fixNoteFormat,
+    startTimeTracking,
+  ])
 
   // Pause MIDI
   const pauseMidi = useCallback(() => {
     if (isPlaying) {
-      console.log("Pausing MIDI playback at time:", currentTime)
-
-      // Store current playback position
+      console.log("⏸️ Pausing MIDI playback at time:", currentTime)
       playbackOffset.current = currentTime
-
       clearScheduledEvents()
       setIsPlaying(false)
       playbackStartTime.current = 0
@@ -300,7 +273,7 @@ export function usePiano() {
 
   // Stop MIDI
   const stopMidi = useCallback(() => {
-    console.log("Stopping MIDI playback")
+    console.log("⏹️ Stopping MIDI playback")
     clearScheduledEvents()
     setIsPlaying(false)
     setCurrentTime(0)
