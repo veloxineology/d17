@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Play, Pause, Square, Upload, Volume2, Settings } from "lucide-react"
+import { Play, Pause, Square, Upload, Volume2, Settings, TestTube } from "lucide-react"
 import PianoKeyboard from "@/components/piano-keyboard"
 import MidiPlayer from "@/components/midi-player"
 import { usePiano } from "@/hooks/use-piano"
@@ -41,6 +41,20 @@ export default function PianoApp() {
     if (file && (file.name.endsWith(".mid") || file.name.endsWith(".midi"))) {
       loadMidiFile(file)
     }
+  }
+
+  const testSound = () => {
+    console.log("Testing sound...")
+    pressNote("C4", 0.8)
+    setTimeout(() => {
+      releaseNote("C4")
+      pressNote("E4", 0.8)
+      setTimeout(() => {
+        releaseNote("E4")
+        pressNote("G4", 0.8)
+        setTimeout(() => releaseNote("G4"), 500)
+      }, 300)
+    }, 300)
   }
 
   if (isLoading) {
@@ -79,7 +93,7 @@ export default function PianoApp() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Volume Control */}
               <div className="space-y-2">
                 <Label className="text-white flex items-center gap-2">
@@ -122,6 +136,15 @@ export default function PianoApp() {
                   className="w-full bg-slate-700 text-white border-slate-600"
                 >
                   {sustainPedal ? "ON" : "OFF"}
+                </Button>
+              </div>
+
+              {/* Test Sound */}
+              <div className="space-y-2">
+                <Label className="text-white">Test Audio</Label>
+                <Button onClick={testSound} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                  <TestTube className="w-4 h-4 mr-2" />
+                  Test
                 </Button>
               </div>
             </div>
@@ -236,6 +259,9 @@ export default function PianoApp() {
             </p>
             <p>
               <strong>Scroll:</strong> Use mouse wheel or drag to scroll through octaves
+            </p>
+            <p>
+              <strong>Test Audio:</strong> Click the Test button to verify sound is working
             </p>
           </CardContent>
         </Card>
