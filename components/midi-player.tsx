@@ -1,13 +1,20 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import Tone from "tone"
 
 interface MidiPlayerProps {
   midiFile: any
   currentTime: number
   isPlaying: boolean
   activeNotes: Set<string>
+}
+
+// Helper function to convert MIDI note number to note name
+function midiToNoteName(midiNumber: number): string {
+  const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+  const octave = Math.floor(midiNumber / 12) - 1
+  const noteIndex = midiNumber % 12
+  return `${noteNames[noteIndex]}${octave}`
 }
 
 export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNotes }: MidiPlayerProps) {
@@ -59,7 +66,7 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     }
 
     // Horizontal lines (note ranges)
-    const noteRanges = [21, 36, 48, 60, 72, 84, 96, 108] // Piano ranges
+    const noteRanges = [21, 36, 48, 60, 72, 84, 96, 108] // Piano ranges (A0 to C8)
     noteRanges.forEach((midiNote) => {
       const y = height - ((midiNote - 21) / (108 - 21)) * height
       ctx.beginPath()
@@ -170,12 +177,12 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       }
     }
 
-    // Draw note range labels
+    // Draw note range labels using our helper function
     ctx.textAlign = "left"
     ctx.font = "10px monospace"
     noteRanges.forEach((midiNote) => {
       const y = height - ((midiNote - 21) / (108 - 21)) * height
-      const noteName = Tone.Frequency(midiNote, "midi").toNote()
+      const noteName = midiToNoteName(midiNote)
       ctx.fillText(noteName, 5, y - 5)
     })
   }, [midiFile, currentTime, activeNotes, isPlaying])
