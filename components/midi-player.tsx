@@ -43,17 +43,12 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     ctx.fillStyle = "#1e293b"
     ctx.fillRect(0, 0, width, height)
 
-    // Configuration for better visualization - FIXED
+    // Configuration for better visualization
     const noteHeight = 4
-    const pixelsPerSecond = 60 // Adjusted for better visibility
+    const pixelsPerSecond = 80 // Slower scroll for better visibility
     const viewportTime = width / pixelsPerSecond
-    // Center the current time in the viewport for better tracking
-    const startTime = Math.max(0, currentTime - viewportTime * 0.3) // Show 30% past, 70% future
+    const startTime = Math.max(0, currentTime - viewportTime * 0.2) // Show more future context
     const endTime = startTime + viewportTime
-
-    console.log(
-      `Visualization: currentTime=${currentTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, endTime=${endTime.toFixed(2)}`,
-    )
 
     // Draw grid lines
     ctx.strokeStyle = "#334155"
@@ -157,36 +152,24 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       }
     })
 
-    // Draw current time line (playback needle) - ENHANCED
+    // Draw current time line (playback needle)
     const currentX = (currentTime - startTime) * pixelsPerSecond
-    console.log(
-      `Needle position: currentTime=${currentTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, currentX=${currentX.toFixed(2)}`,
-    )
-
     if (currentX >= 0 && currentX <= width) {
       // Draw a more prominent playback line
       ctx.strokeStyle = "#ef4444"
-      ctx.lineWidth = 4
-      ctx.shadowColor = "#ef4444"
-      ctx.shadowBlur = 8
+      ctx.lineWidth = 3
       ctx.beginPath()
       ctx.moveTo(currentX, 0)
       ctx.lineTo(currentX, height)
       ctx.stroke()
-      ctx.shadowBlur = 0 // Reset shadow
 
-      // Add a more prominent triangle at the top
+      // Add a small triangle at the top
       ctx.fillStyle = "#ef4444"
       ctx.beginPath()
-      ctx.moveTo(currentX - 8, 0)
-      ctx.lineTo(currentX + 8, 0)
-      ctx.lineTo(currentX, 15)
+      ctx.moveTo(currentX - 5, 0)
+      ctx.lineTo(currentX + 5, 0)
+      ctx.lineTo(currentX, 10)
       ctx.closePath()
-      ctx.fill()
-
-      // Add a small circle at the bottom
-      ctx.beginPath()
-      ctx.arc(currentX, height - 10, 5, 0, 2 * Math.PI)
       ctx.fill()
     }
 
