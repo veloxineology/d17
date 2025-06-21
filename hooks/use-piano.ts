@@ -155,12 +155,13 @@ export function usePiano() {
     setActiveNotes(new Set()) // Clear all active notes
   }, [releaseNote])
 
-  // Update current time during playback - THIS IS THE KEY FIX
+  // Update current time during playback - FIXED VERSION
   const updateCurrentTime = useCallback(() => {
     if (isPlaying && playbackStartTime.current > 0) {
-      const elapsed = (performance.now() - playbackStartTime.current) / 1000
+      const elapsed = (Date.now() - playbackStartTime.current) / 1000
       const totalTime = playbackOffset.current + elapsed
 
+      // Force update the current time state
       setCurrentTime(totalTime)
 
       if (totalTime < duration) {
@@ -169,22 +170,14 @@ export function usePiano() {
         // Playback finished
         console.log("Playback finished")
         setIsPlaying(false)
-        setCurrentTime(0)
+        setCurrentTime(duration) // Set to end
         playbackOffset.current = 0
         clearScheduledEvents()
       }
     }
   }, [isPlaying, duration, clearScheduledEvents])
 
-  // Start the time update loop
-  const startTimeUpdate = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-    updateCurrentTime()
-  }, [updateCurrentTime])
-
-  // Play MIDI
+  // Play MIDI - FIXED VERSION
   const playMidi = useCallback(async () => {
     if (!midiFile || !soundEngine || isPlaying) {
       console.warn("Cannot start playback:", { midiFile: !!midiFile, soundEngine: !!soundEngine, isPlaying })
@@ -241,9 +234,12 @@ export function usePiano() {
       // Sort notes by time
       allNotes.sort((a, b) => a.time - b.time)
 
-      // Start playback timing
-      playbackStartTime.current = performance.now()
+      // CRITICAL: Start playback timing BEFORE setting isPlaying
+      playbackStartTime.current = Date.now()
       setIsPlaying(true)
+
+      // Immediately start the time update loop
+      animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
 
       // Schedule all note events relative to current playback position
       let scheduledCount = 0
@@ -280,15 +276,13 @@ export function usePiano() {
         }
       })
 
-      // Start time update loop - THIS IS CRUCIAL
-      startTimeUpdate()
-
       console.log(`✅ Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
+      console.log("Playback started at:", new Date(playbackStartTime.current).toISOString())
     } catch (error) {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
     }
-  }, [midiFile, soundEngine, isPlaying, pressNote, releaseNote, clearScheduledEvents, fixNoteFormat, startTimeUpdate])
+  }, [midiFile, soundEngine, isPlaying, pressNote, releaseNote, clearScheduledEvents, fixNoteFormat, updateCurrentTime])
 
   // Pause MIDI
   const pauseMidi = useCallback(() => {
