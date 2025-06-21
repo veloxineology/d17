@@ -43,19 +43,24 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     ctx.fillStyle = "#1e293b"
     ctx.fillRect(0, 0, width, height)
 
-    // Configuration
-    const noteHeight = 3
-    const pixelsPerSecond = 100
+    // Configuration for better visualization - FIXED
+    const noteHeight = 4
+    const pixelsPerSecond = 60 // Adjusted for better visibility
     const viewportTime = width / pixelsPerSecond
-    const startTime = Math.max(0, currentTime - viewportTime / 4) // Show more context
+    // Center the current time in the viewport for better tracking
+    const startTime = Math.max(0, currentTime - viewportTime * 0.3) // Show 30% past, 70% future
     const endTime = startTime + viewportTime
+
+    console.log(
+      `Visualization: currentTime=${currentTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, endTime=${endTime.toFixed(2)}`,
+    )
 
     // Draw grid lines
     ctx.strokeStyle = "#334155"
     ctx.lineWidth = 0.5
 
-    // Vertical lines (time) - every second
-    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 1) {
+    // Vertical lines (time) - every 2 seconds
+    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 2) {
       const x = (t - startTime) * pixelsPerSecond
       if (x >= 0 && x <= width) {
         ctx.beginPath()
@@ -102,8 +107,6 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       })
     }
 
-    console.log(`Rendering ${allNotes.length} notes in visualizer`)
-
     // Draw notes
     allNotes.forEach((note) => {
       const noteStartTime = note.time
@@ -114,9 +117,10 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
         const startX = (noteStartTime - startTime) * pixelsPerSecond
         const endX = (noteEndTime - startTime) * pixelsPerSecond
         const y = height - ((note.midi - 21) / (108 - 21)) * height // Map MIDI note to Y position
-        const noteWidth = Math.max(2, endX - startX)
+        const noteWidth = Math.max(3, endX - startX)
 
-        const noteName = `${note.name}${note.octave}`
+        // Fix note name format for comparison
+        const noteName = `${note.name.replace(/[^A-G#b]/g, "")}${note.octave}`
         const isActive = activeNotes.has(noteName)
         const isCurrentlyPlaying = currentTime >= noteStartTime && currentTime <= noteEndTime && isPlaying
 
@@ -132,6 +136,7 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
           color = "#f59e0b" // Yellow for medium notes
         }
 
+        // Draw note with rounded corners
         ctx.fillStyle = color
         ctx.fillRect(
           Math.max(0, startX),
@@ -141,8 +146,8 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
         )
 
         // Draw note border for better visibility
-        ctx.strokeStyle = "#1e293b"
-        ctx.lineWidth = 0.5
+        ctx.strokeStyle = isCurrentlyPlaying ? "#ffffff" : "#1e293b"
+        ctx.lineWidth = isCurrentlyPlaying ? 1 : 0.5
         ctx.strokeRect(
           Math.max(0, startX),
           y - noteHeight,
@@ -152,15 +157,37 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       }
     })
 
-    // Draw current time line
+    // Draw current time line (playback needle) - ENHANCED
     const currentX = (currentTime - startTime) * pixelsPerSecond
+    console.log(
+      `Needle position: currentTime=${currentTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, currentX=${currentX.toFixed(2)}`,
+    )
+
     if (currentX >= 0 && currentX <= width) {
+      // Draw a more prominent playback line
       ctx.strokeStyle = "#ef4444"
-      ctx.lineWidth = 3
+      ctx.lineWidth = 4
+      ctx.shadowColor = "#ef4444"
+      ctx.shadowBlur = 8
       ctx.beginPath()
       ctx.moveTo(currentX, 0)
       ctx.lineTo(currentX, height)
       ctx.stroke()
+      ctx.shadowBlur = 0 // Reset shadow
+
+      // Add a more prominent triangle at the top
+      ctx.fillStyle = "#ef4444"
+      ctx.beginPath()
+      ctx.moveTo(currentX - 8, 0)
+      ctx.lineTo(currentX + 8, 0)
+      ctx.lineTo(currentX, 15)
+      ctx.closePath()
+      ctx.fill()
+
+      // Add a small circle at the bottom
+      ctx.beginPath()
+      ctx.arc(currentX, height - 10, 5, 0, 2 * Math.PI)
+      ctx.fill()
     }
 
     // Draw time labels
@@ -168,7 +195,7 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     ctx.font = "12px monospace"
     ctx.textAlign = "center"
 
-    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 2) {
+    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 5) {
       const x = (t - startTime) * pixelsPerSecond
       if (x >= 30 && x <= width - 30) {
         const minutes = Math.floor(t / 60)
@@ -177,9 +204,18 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       }
     }
 
+    // Draw current time indicator
+    ctx.fillStyle = "#ef4444"
+    ctx.font = "14px monospace"
+    ctx.textAlign = "left"
+    const currentMinutes = Math.floor(currentTime / 60)
+    const currentSeconds = Math.floor(currentTime % 60)
+    ctx.fillText(`${currentMinutes}:${currentSeconds.toString().padStart(2, "0")}`, 10, height - 10)
+
     // Draw note range labels using our helper function
     ctx.textAlign = "left"
     ctx.font = "10px monospace"
+    ctx.fillStyle = "#94a3b8"
     noteRanges.forEach((midiNote) => {
       const y = height - ((midiNote - 21) / (108 - 21)) * height
       const noteName = midiToNoteName(midiNote)
