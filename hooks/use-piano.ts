@@ -16,10 +16,9 @@ export function usePiano() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  const playbackStartTime = useRef<number>(0)
-  const playbackPauseTime = useRef<number>(0)
+  const startTimeRef = useRef<number>(0)
   const animationFrameRef = useRef<number>()
-  const scheduledNotes = useRef<Map<string, NodeJS.Timeout>>(new Map())
+  const scheduledEvents = useRef<Array<{ timeout: NodeJS.Timeout; type: string; note: string }>>([])
 
   // Initialize sound engine
   useEffect(() => {
@@ -56,8 +55,12 @@ export function usePiano() {
   // Press note
   const pressNote = useCallback(
     (note: string, velocity = 0.8) => {
-      if (!soundEngine) return
+      if (!soundEngine) {
+        console.warn("Sound engine not available for note:", note)
+        return
+      }
 
+      console.log("Pressing note:", note, "velocity:", velocity)
       soundEngine.pressNote(note, velocity)
       setActiveNotes((prev) => new Set(prev).add(note))
     },
@@ -67,8 +70,12 @@ export function usePiano() {
   // Release note
   const releaseNote = useCallback(
     (note: string) => {
-      if (!soundEngine) return
+      if (!soundEngine) {
+        console.warn("Sound engine not available for releasing note:", note)
+        return
+      }
 
+      console.log("Releasing note:", note)
       soundEngine.releaseNote(note)
       setActiveNotes((prev) => {
         const newSet = new Set(prev)
@@ -112,40 +119,49 @@ export function usePiano() {
     }
   }, [])
 
-  // Clear all scheduled notes
-  const clearScheduledNotes = useCallback(() => {
-    scheduledNotes.current.forEach((timeout) => {
+  // Clear all scheduled events
+  const clearScheduledEvents = useCallback(() => {
+    console.log("Clearing", scheduledEvents.current.length, "scheduled events")
+    scheduledEvents.current.forEach(({ timeout, note, type }) => {
       clearTimeout(timeout)
+      if (type === "noteOn") {
+        // Release any notes that were scheduled to play
+        releaseNote(note)
+      }
     })
-    scheduledNotes.current.clear()
+    scheduledEvents.current = []
+
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
     }
+
     setActiveNotes(new Set()) // Clear all active notes
-  }, [])
+  }, [releaseNote])
 
   // Update current time during playback
   const updateCurrentTime = useCallback(() => {
-    if (isPlaying) {
-      const elapsed = (performance.now() - playbackStartTime.current) / 1000
-      const totalTime = playbackPauseTime.current + elapsed
-      setCurrentTime(totalTime)
+    if (isPlaying && startTimeRef.current > 0) {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000
+      setCurrentTime(elapsed)
 
-      if (totalTime < duration) {
+      if (elapsed < duration) {
         animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
       } else {
         // Playback finished
+        console.log("Playback finished")
         setIsPlaying(false)
         setCurrentTime(0)
-        playbackPauseTime.current = 0
-        clearScheduledNotes()
+        clearScheduledEvents()
       }
     }
-  }, [isPlaying, duration, clearScheduledNotes])
+  }, [isPlaying, duration, clearScheduledEvents])
 
   // Play MIDI
   const playMidi = useCallback(async () => {
-    if (!midiFile || !soundEngine || isPlaying) return
+    if (!midiFile || !soundEngine || isPlaying) {
+      console.warn("Cannot start playback:", { midiFile: !!midiFile, soundEngine: !!soundEngine, isPlaying })
+      return
+    }
 
     try {
       // Ensure Tone.js context is started
@@ -156,8 +172,8 @@ export function usePiano() {
 
       console.log("Starting MIDI playback...")
 
-      // Clear any existing scheduled notes
-      clearScheduledNotes()
+      // Clear any existing scheduled events
+      clearScheduledEvents()
 
       // Collect all notes from all tracks
       const allNotes: Array<{
@@ -192,74 +208,83 @@ export function usePiano() {
       // Sort notes by time
       allNotes.sort((a, b) => a.time - b.time)
 
-      // Start playback
-      playbackStartTime.current = performance.now()
+      // Start playback timing
+      startTimeRef.current = Date.now()
       setIsPlaying(true)
+      setCurrentTime(0)
 
       // Schedule all note events
       let scheduledCount = 0
       allNotes.forEach((noteEvent, index) => {
-        const startDelay = (noteEvent.time - playbackPauseTime.current) * 1000
-        const endDelay = (noteEvent.time + noteEvent.duration - playbackPauseTime.current) * 1000
+        const startDelay = noteEvent.time * 1000 // Convert to milliseconds
+        const endDelay = (noteEvent.time + noteEvent.duration) * 1000
 
-        if (startDelay >= 0) {
-          // Schedule note on
-          const noteOnTimeout = setTimeout(() => {
-            console.log(`Playing note: ${noteEvent.note} at time ${noteEvent.time}`)
-            pressNote(noteEvent.note, noteEvent.velocity)
-          }, startDelay)
+        // Schedule note on
+        const noteOnTimeout = setTimeout(() => {
+          console.log(`🎵 Playing note: ${noteEvent.note} at time ${noteEvent.time}s (velocity: ${noteEvent.velocity})`)
+          pressNote(noteEvent.note, noteEvent.velocity)
+        }, startDelay)
 
-          // Schedule note off
-          const noteOffTimeout = setTimeout(
-            () => {
-              console.log(`Releasing note: ${noteEvent.note}`)
-              releaseNote(noteEvent.note)
-            },
-            Math.max(endDelay, startDelay + 100),
-          ) // Minimum 100ms note duration
+        // Schedule note off
+        const noteOffTimeout = setTimeout(
+          () => {
+            console.log(`🎵 Releasing note: ${noteEvent.note} after ${noteEvent.duration}s`)
+            releaseNote(noteEvent.note)
+          },
+          Math.max(endDelay, startDelay + 100),
+        ) // Minimum 100ms note duration
 
-          // Store scheduled timeouts
-          scheduledNotes.current.set(`on-${index}`, noteOnTimeout)
-          scheduledNotes.current.set(`off-${index}`, noteOffTimeout)
-          scheduledCount += 2
-        }
+        // Store scheduled events
+        scheduledEvents.current.push(
+          { timeout: noteOnTimeout, type: "noteOn", note: noteEvent.note },
+          { timeout: noteOffTimeout, type: "noteOff", note: noteEvent.note },
+        )
+        scheduledCount += 2
       })
 
       // Start time update loop
       updateCurrentTime()
 
-      console.log(`Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
+      console.log(`✅ Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
+      console.log("First note should play at:", allNotes[0]?.time, "seconds")
+
+      // Test the sound engine immediately
+      console.log("🔊 Testing sound engine...")
+      setTimeout(() => {
+        pressNote("C4", 0.8)
+        setTimeout(() => releaseNote("C4"), 500)
+      }, 100)
     } catch (error) {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
     }
-  }, [midiFile, soundEngine, isPlaying, duration, pressNote, releaseNote, clearScheduledNotes, updateCurrentTime])
+  }, [midiFile, soundEngine, isPlaying, duration, pressNote, releaseNote, clearScheduledEvents, updateCurrentTime])
 
   // Pause MIDI
   const pauseMidi = useCallback(() => {
     if (isPlaying) {
       console.log("Pausing MIDI playback")
-      playbackPauseTime.current += (performance.now() - playbackStartTime.current) / 1000
-      clearScheduledNotes()
+      clearScheduledEvents()
       setIsPlaying(false)
+      startTimeRef.current = 0
     }
-  }, [isPlaying, clearScheduledNotes])
+  }, [isPlaying, clearScheduledEvents])
 
   // Stop MIDI
   const stopMidi = useCallback(() => {
     console.log("Stopping MIDI playback")
-    clearScheduledNotes()
+    clearScheduledEvents()
     setIsPlaying(false)
     setCurrentTime(0)
-    playbackPauseTime.current = 0
-  }, [clearScheduledNotes])
+    startTimeRef.current = 0
+  }, [clearScheduledEvents])
 
   // Cleanup
   useEffect(() => {
     return () => {
-      clearScheduledNotes()
+      clearScheduledEvents()
     }
-  }, [clearScheduledNotes])
+  }, [clearScheduledEvents])
 
   return {
     soundEngine,
