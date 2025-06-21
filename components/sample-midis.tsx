@@ -36,15 +36,9 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
       setLoading(true)
       setError(null)
 
-      // Try to fetch a directory listing or manifest file
-      // Since we can't directly list directory contents in the browser,
-      // we'll try a different approach - attempt to fetch common file extensions
       const availableSamples: MidiSample[] = []
 
-      // We'll try to fetch files and see which ones exist
-      // This is a workaround since we can't list directory contents directly
-
-      // First, try to fetch a manifest file if you create one
+      // Try to fetch a manifest file
       try {
         const manifestResponse = await fetch("/midi-samples/manifest.json")
         if (manifestResponse.ok) {
@@ -70,12 +64,6 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
         }
       } catch {
         // No manifest file, that's okay
-      }
-
-      // If no manifest, we can't automatically discover files
-      // The user will need to create a manifest.json file
-      if (availableSamples.length === 0) {
-        console.log("No manifest.json found or no files listed in manifest")
       }
 
       setSamples(availableSamples)
@@ -113,15 +101,15 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
   if (loading) {
     return (
       <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white flex items-center gap-2 text-lg">
             <Music className="w-5 h-5" />
             Sample MIDIs by Kaushik
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-slate-400">Scanning for MIDI files...</div>
+          <div className="flex items-center justify-center py-6">
+            <div className="text-slate-400 text-sm">Scanning for MIDI files...</div>
           </div>
         </CardContent>
       </Card>
@@ -130,8 +118,8 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
 
   return (
     <Card className="bg-slate-800/50 border-slate-700">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2 justify-between">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-white flex items-center gap-2 justify-between text-lg">
           <div className="flex items-center gap-2">
             <Music className="w-5 h-5" />
             Sample MIDIs by Kaushik
@@ -140,50 +128,46 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             onClick={discoverMidiFiles}
             variant="outline"
             size="sm"
-            className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
+            className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 text-xs"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            <RefreshCw className="w-3 h-3 mr-1" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {samples.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-slate-400 mb-4">No sample MIDIs found</div>
-            <div className="text-sm text-slate-500 bg-slate-700/50 rounded-lg p-4 max-w-2xl mx-auto space-y-3">
-              <div>
-                <strong>Setup Instructions:</strong>
-              </div>
-              <div>
-                1. Create folder:{" "}
-                <code className="bg-slate-600 px-2 py-1 rounded text-slate-200">public/midi-samples/</code>
-              </div>
-              <div>2. Add your MIDI files there (e.g., song1.mid, piece2.midi, etc.)</div>
-              <div>
-                3. Create a <code className="bg-slate-600 px-2 py-1 rounded text-slate-200">manifest.json</code> file:
-              </div>
-              <div className="bg-slate-800 p-3 rounded text-xs font-mono text-left">
-                {`{
+          <div className="text-center py-6">
+            <div className="text-slate-400 mb-4 text-sm">No sample MIDIs found</div>
+            <details className="text-xs sm:text-sm text-slate-500 bg-slate-700/50 rounded-lg p-4 max-w-2xl mx-auto">
+              <summary className="cursor-pointer font-medium mb-3">Setup Instructions</summary>
+              <div className="space-y-2 text-left">
+                <div>
+                  1. Create folder:{" "}
+                  <code className="bg-slate-600 px-2 py-1 rounded text-slate-200 text-xs">public/midi-samples/</code>
+                </div>
+                <div>2. Add your MIDI files there</div>
+                <div>
+                  3. Create a{" "}
+                  <code className="bg-slate-600 px-2 py-1 rounded text-slate-200 text-xs">manifest.json</code> file:
+                </div>
+                <div className="bg-slate-800 p-3 rounded text-xs font-mono text-left overflow-x-auto">
+                  {`{
   "files": [
-    "your-song-1.mid",
-    "your-song-2.midi",
-    "another-piece.mid"
+    "your-song.mid"
   ]
 }`}
+                </div>
+                <div>4. Click Refresh</div>
               </div>
-              <div>
-                4. Click the <strong>Refresh</strong> button above
-              </div>
-            </div>
+            </details>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="text-sm text-slate-400 mb-4">
-              Found {samples.length} MIDI file{samples.length !== 1 ? "s" : ""}. Click any sample below to load and play
-              it:
+            <div className="text-xs sm:text-sm text-slate-400 mb-4">
+              Found {samples.length} MIDI file{samples.length !== 1 ? "s" : ""}. Tap any sample to load and play:
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {samples.map((sample) => {
                 const isCurrentSample = currentMidiName === sample.name
                 const isPlaying = isCurrentSample && isCurrentlyPlaying
@@ -194,7 +178,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
                     onClick={() => loadSample(sample)}
                     variant={isCurrentSample ? "default" : "outline"}
                     className={`
-                      h-auto p-4 flex flex-col items-start gap-2 text-left
+                      h-auto p-3 sm:p-4 flex flex-col items-start gap-2 text-left
                       ${
                         isCurrentSample
                           ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
@@ -205,7 +189,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
                   >
                     <div className="flex items-center gap-2 w-full">
                       <Play className={`w-4 h-4 ${isPlaying ? "text-green-400" : ""}`} />
-                      <span className="font-medium truncate flex-1">{sample.displayName}</span>
+                      <span className="font-medium truncate flex-1 text-sm">{sample.displayName}</span>
                     </div>
                     <div className="text-xs opacity-75 truncate w-full">{sample.name}</div>
                     {isCurrentSample && (
@@ -223,8 +207,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             )}
 
             <div className="text-xs text-slate-500 mt-4 p-3 bg-slate-700/30 rounded-lg">
-              <strong>Tip:</strong> Add more MIDI files to the <code>public/midi-samples/</code> folder, update the
-              manifest.json, and click Refresh to see them here.
+              <strong>Tip:</strong> Add more MIDI files to the folder, update manifest.json, and tap Refresh.
             </div>
           </div>
         )}
