@@ -16,9 +16,10 @@ export function usePiano() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  const startTimeRef = useRef<number>(0)
+  const playbackStartTime = useRef<number>(0)
+  const playbackOffset = useRef<number>(0) // For pause/resume
   const animationFrameRef = useRef<number>()
-  const scheduledEvents = useRef<Array<{ timeout: NodeJS.Timeout; type: string; note: string }>>([])
+  const scheduledEvents = useRef<Array<{ timeout: NodeJS.Timeout; type: string; note: string; time: number }>>([])
 
   // Helper function to fix note format
   const fixNoteFormat = useCallback((noteName: string, octave: number): string => {
@@ -35,7 +36,6 @@ export function usePiano() {
     const cleanOctave = Math.max(0, Math.min(8, Math.floor(octave)))
 
     const result = `${cleanNoteName}${cleanOctave}`
-    console.log(`Fixed note format: ${noteName}${octave} -> ${result}`)
     return result
   }, [])
 
@@ -79,7 +79,6 @@ export function usePiano() {
         return
       }
 
-      console.log("Pressing note:", note, "velocity:", velocity)
       soundEngine.pressNote(note, velocity)
       setActiveNotes((prev) => new Set(prev).add(note))
     },
@@ -94,7 +93,6 @@ export function usePiano() {
         return
       }
 
-      console.log("Releasing note:", note)
       soundEngine.releaseNote(note)
       setActiveNotes((prev) => {
         const newSet = new Set(prev)
@@ -113,6 +111,7 @@ export function usePiano() {
       setMidiFile(midi)
       setDuration(midi.duration)
       setCurrentTime(0)
+      playbackOffset.current = 0
       console.log("MIDI file loaded:", midi)
       console.log("Tracks:", midi.tracks.length)
       console.log("Duration:", midi.duration)
@@ -123,13 +122,11 @@ export function usePiano() {
         if (track.notes && track.notes.length > 0) {
           console.log(
             "First few notes:",
-            track.notes.slice(0, 5).map((n) => ({
+            track.notes.slice(0, 3).map((n) => ({
               name: n.name,
               octave: n.octave,
               time: n.time,
               duration: n.duration,
-              velocity: n.velocity,
-              midi: n.midi,
             })),
           )
         }
@@ -158,23 +155,34 @@ export function usePiano() {
     setActiveNotes(new Set()) // Clear all active notes
   }, [releaseNote])
 
-  // Update current time during playback
+  // Update current time during playback - THIS IS THE KEY FIX
   const updateCurrentTime = useCallback(() => {
-    if (isPlaying && startTimeRef.current > 0) {
-      const elapsed = (Date.now() - startTimeRef.current) / 1000
-      setCurrentTime(elapsed)
+    if (isPlaying && playbackStartTime.current > 0) {
+      const elapsed = (performance.now() - playbackStartTime.current) / 1000
+      const totalTime = playbackOffset.current + elapsed
 
-      if (elapsed < duration) {
+      setCurrentTime(totalTime)
+
+      if (totalTime < duration) {
         animationFrameRef.current = requestAnimationFrame(updateCurrentTime)
       } else {
         // Playback finished
         console.log("Playback finished")
         setIsPlaying(false)
         setCurrentTime(0)
+        playbackOffset.current = 0
         clearScheduledEvents()
       }
     }
   }, [isPlaying, duration, clearScheduledEvents])
+
+  // Start the time update loop
+  const startTimeUpdate = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+    }
+    updateCurrentTime()
+  }, [updateCurrentTime])
 
   // Play MIDI
   const playMidi = useCallback(async () => {
@@ -190,7 +198,7 @@ export function usePiano() {
         console.log("Tone.js context started")
       }
 
-      console.log("Starting MIDI playback...")
+      console.log("Starting MIDI playback from time:", playbackOffset.current)
 
       // Clear any existing scheduled events
       clearScheduledEvents()
@@ -206,111 +214,95 @@ export function usePiano() {
 
       midiFile.tracks.forEach((track, trackIndex) => {
         if (track.notes && track.notes.length > 0) {
-          console.log(`Processing track ${trackIndex} with ${track.notes.length} notes`)
           track.notes.forEach((note) => {
-            // Fix the note format properly
-            const originalNoteName = `${note.name}${note.octave}`
-            const fixedNoteName = fixNoteFormat(note.name, note.octave)
+            // Only include notes that haven't been played yet
+            if (note.time >= playbackOffset.current) {
+              const originalNoteName = `${note.name}${note.octave}`
+              const fixedNoteName = fixNoteFormat(note.name, note.octave)
 
-            allNotes.push({
-              time: note.time,
-              duration: note.duration,
-              note: fixedNoteName,
-              velocity: note.velocity,
-              originalNote: originalNoteName,
-            })
+              allNotes.push({
+                time: note.time,
+                duration: note.duration,
+                note: fixedNoteName,
+                velocity: note.velocity,
+                originalNote: originalNoteName,
+              })
+            }
           })
         }
       })
 
-      console.log("Total notes to play:", allNotes.length)
+      console.log("Notes to play from current position:", allNotes.length)
       if (allNotes.length === 0) {
-        console.warn("No notes found in MIDI file!")
+        console.warn("No more notes to play!")
         return
       }
-
-      // Show some example note conversions
-      console.log("Note format examples:")
-      allNotes.slice(0, 5).forEach((note) => {
-        console.log(`  ${note.originalNote} -> ${note.note}`)
-      })
 
       // Sort notes by time
       allNotes.sort((a, b) => a.time - b.time)
 
       // Start playback timing
-      startTimeRef.current = Date.now()
+      playbackStartTime.current = performance.now()
       setIsPlaying(true)
-      setCurrentTime(0)
 
-      // Schedule all note events
+      // Schedule all note events relative to current playback position
       let scheduledCount = 0
       allNotes.forEach((noteEvent, index) => {
-        const startDelay = noteEvent.time * 1000 // Convert to milliseconds
-        const endDelay = (noteEvent.time + noteEvent.duration) * 1000
+        const startDelay = (noteEvent.time - playbackOffset.current) * 1000 // Convert to milliseconds
+        const endDelay = (noteEvent.time + noteEvent.duration - playbackOffset.current) * 1000
 
-        // Schedule note on
-        const noteOnTimeout = setTimeout(() => {
-          console.log(
-            `🎵 Playing note: ${noteEvent.note} (was ${noteEvent.originalNote}) at time ${noteEvent.time}s (velocity: ${noteEvent.velocity})`,
+        if (startDelay >= 0) {
+          // Schedule note on
+          const noteOnTimeout = setTimeout(() => {
+            console.log(`🎵 Playing: ${noteEvent.note} at ${noteEvent.time.toFixed(2)}s`)
+            pressNote(noteEvent.note, noteEvent.velocity)
+          }, startDelay)
+
+          // Schedule note off
+          const noteOffTimeout = setTimeout(
+            () => {
+              releaseNote(noteEvent.note)
+            },
+            Math.max(endDelay, startDelay + 100),
+          ) // Minimum 100ms note duration
+
+          // Store scheduled events
+          scheduledEvents.current.push(
+            { timeout: noteOnTimeout, type: "noteOn", note: noteEvent.note, time: noteEvent.time },
+            {
+              timeout: noteOffTimeout,
+              type: "noteOff",
+              note: noteEvent.note,
+              time: noteEvent.time + noteEvent.duration,
+            },
           )
-          pressNote(noteEvent.note, noteEvent.velocity)
-        }, startDelay)
-
-        // Schedule note off
-        const noteOffTimeout = setTimeout(
-          () => {
-            console.log(`🎵 Releasing note: ${noteEvent.note} after ${noteEvent.duration}s`)
-            releaseNote(noteEvent.note)
-          },
-          Math.max(endDelay, startDelay + 100),
-        ) // Minimum 100ms note duration
-
-        // Store scheduled events
-        scheduledEvents.current.push(
-          { timeout: noteOnTimeout, type: "noteOn", note: noteEvent.note },
-          { timeout: noteOffTimeout, type: "noteOff", note: noteEvent.note },
-        )
-        scheduledCount += 2
+          scheduledCount += 2
+        }
       })
 
-      // Start time update loop
-      updateCurrentTime()
+      // Start time update loop - THIS IS CRUCIAL
+      startTimeUpdate()
 
       console.log(`✅ Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
-      console.log("First note should play at:", allNotes[0]?.time, "seconds")
-
-      // Test the sound engine immediately
-      console.log("🔊 Testing sound engine...")
-      setTimeout(() => {
-        pressNote("C4", 0.8)
-        setTimeout(() => releaseNote("C4"), 500)
-      }, 100)
     } catch (error) {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
     }
-  }, [
-    midiFile,
-    soundEngine,
-    isPlaying,
-    duration,
-    pressNote,
-    releaseNote,
-    clearScheduledEvents,
-    updateCurrentTime,
-    fixNoteFormat,
-  ])
+  }, [midiFile, soundEngine, isPlaying, pressNote, releaseNote, clearScheduledEvents, fixNoteFormat, startTimeUpdate])
 
   // Pause MIDI
   const pauseMidi = useCallback(() => {
     if (isPlaying) {
-      console.log("Pausing MIDI playback")
+      console.log("Pausing MIDI playback at time:", currentTime)
+
+      // Store current playback position
+      playbackOffset.current = currentTime
+
       clearScheduledEvents()
       setIsPlaying(false)
-      startTimeRef.current = 0
+      playbackStartTime.current = 0
     }
-  }, [isPlaying, clearScheduledEvents])
+  }, [isPlaying, currentTime, clearScheduledEvents])
 
   // Stop MIDI
   const stopMidi = useCallback(() => {
@@ -318,7 +310,8 @@ export function usePiano() {
     clearScheduledEvents()
     setIsPlaying(false)
     setCurrentTime(0)
-    startTimeRef.current = 0
+    playbackOffset.current = 0
+    playbackStartTime.current = 0
   }, [clearScheduledEvents])
 
   // Cleanup
