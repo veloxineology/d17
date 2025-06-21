@@ -19,7 +19,7 @@ export function usePiano() {
   const playbackStartTime = useRef<number>(0)
   const playbackPauseTime = useRef<number>(0)
   const animationFrameRef = useRef<number>()
-  const scheduledNotes = useRef<Map<string, { timeout: NodeJS.Timeout; note: string }>>(new Map())
+  const scheduledNotes = useRef<Map<string, NodeJS.Timeout>>(new Map())
 
   // Initialize sound engine
   useEffect(() => {
@@ -102,6 +102,7 @@ export function usePiano() {
               octave: n.octave,
               time: n.time,
               duration: n.duration,
+              velocity: n.velocity,
             })),
           )
         }
@@ -113,16 +114,15 @@ export function usePiano() {
 
   // Clear all scheduled notes
   const clearScheduledNotes = useCallback(() => {
-    scheduledNotes.current.forEach(({ timeout, note }) => {
+    scheduledNotes.current.forEach((timeout) => {
       clearTimeout(timeout)
-      releaseNote(note) // Release any notes that were playing
     })
     scheduledNotes.current.clear()
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
     }
     setActiveNotes(new Set()) // Clear all active notes
-  }, [releaseNote])
+  }, [])
 
   // Update current time during playback
   const updateCurrentTime = useCallback(() => {
@@ -144,13 +144,14 @@ export function usePiano() {
   }, [isPlaying, duration, clearScheduledNotes])
 
   // Play MIDI
-  const playMidi = useCallback(() => {
+  const playMidi = useCallback(async () => {
     if (!midiFile || !soundEngine || isPlaying) return
 
     try {
       // Ensure Tone.js context is started
       if (Tone.context.state !== "running") {
-        Tone.start()
+        await Tone.start()
+        console.log("Tone.js context started")
       }
 
       console.log("Starting MIDI playback...")
@@ -196,6 +197,7 @@ export function usePiano() {
       setIsPlaying(true)
 
       // Schedule all note events
+      let scheduledCount = 0
       allNotes.forEach((noteEvent, index) => {
         const startDelay = (noteEvent.time - playbackPauseTime.current) * 1000
         const endDelay = (noteEvent.time + noteEvent.duration - playbackPauseTime.current) * 1000
@@ -212,21 +214,21 @@ export function usePiano() {
             () => {
               console.log(`Releasing note: ${noteEvent.note}`)
               releaseNote(noteEvent.note)
-              scheduledNotes.current.delete(`off-${index}`)
             },
             Math.max(endDelay, startDelay + 100),
           ) // Minimum 100ms note duration
 
           // Store scheduled timeouts
-          scheduledNotes.current.set(`on-${index}`, { timeout: noteOnTimeout, note: noteEvent.note })
-          scheduledNotes.current.set(`off-${index}`, { timeout: noteOffTimeout, note: noteEvent.note })
+          scheduledNotes.current.set(`on-${index}`, noteOnTimeout)
+          scheduledNotes.current.set(`off-${index}`, noteOffTimeout)
+          scheduledCount += 2
         }
       })
 
       // Start time update loop
       updateCurrentTime()
 
-      console.log(`Scheduled ${allNotes.length} notes for playback`)
+      console.log(`Scheduled ${scheduledCount} events for ${allNotes.length} notes`)
     } catch (error) {
       console.error("Error playing MIDI:", error)
       setIsPlaying(false)
