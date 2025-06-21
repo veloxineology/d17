@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import Tone from "tone"
 
 interface MidiPlayerProps {
   midiFile: any
@@ -36,17 +37,17 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     ctx.fillRect(0, 0, width, height)
 
     // Configuration
-    const noteHeight = 2
-    const pixelsPerSecond = 50
+    const noteHeight = 3
+    const pixelsPerSecond = 100
     const viewportTime = width / pixelsPerSecond
-    const startTime = Math.max(0, currentTime - viewportTime / 2)
+    const startTime = Math.max(0, currentTime - viewportTime / 4) // Show more context
     const endTime = startTime + viewportTime
 
     // Draw grid lines
     ctx.strokeStyle = "#334155"
     ctx.lineWidth = 0.5
 
-    // Vertical lines (time)
+    // Vertical lines (time) - every second
     for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 1) {
       const x = (t - startTime) * pixelsPerSecond
       if (x >= 0 && x <= width) {
@@ -57,14 +58,15 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       }
     }
 
-    // Horizontal lines (octaves)
-    for (let i = 0; i < 128; i += 12) {
-      const y = height - (i / 128) * height
+    // Horizontal lines (note ranges)
+    const noteRanges = [21, 36, 48, 60, 72, 84, 96, 108] // Piano ranges
+    noteRanges.forEach((midiNote) => {
+      const y = height - ((midiNote - 21) / (108 - 21)) * height
       ctx.beginPath()
       ctx.moveTo(0, y)
       ctx.lineTo(width, y)
       ctx.stroke()
-    }
+    })
 
     // Collect all notes from all tracks
     const allNotes: Array<{
@@ -93,6 +95,8 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       })
     }
 
+    console.log(`Rendering ${allNotes.length} notes in visualizer`)
+
     // Draw notes
     allNotes.forEach((note) => {
       const noteStartTime = note.time
@@ -102,16 +106,16 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
       if (noteEndTime >= startTime && noteStartTime <= endTime) {
         const startX = (noteStartTime - startTime) * pixelsPerSecond
         const endX = (noteEndTime - startTime) * pixelsPerSecond
-        const y = height - (note.midi / 128) * height
-        const noteWidth = Math.max(1, endX - startX)
+        const y = height - ((note.midi - 21) / (108 - 21)) * height // Map MIDI note to Y position
+        const noteWidth = Math.max(2, endX - startX)
 
         const noteName = `${note.name}${note.octave}`
         const isActive = activeNotes.has(noteName)
-        const isCurrentlyPlaying = currentTime >= noteStartTime && currentTime <= noteEndTime
+        const isCurrentlyPlaying = currentTime >= noteStartTime && currentTime <= noteEndTime && isPlaying
 
         // Choose color based on state
         let color = "#64748b" // Default gray
-        if (isCurrentlyPlaying && isPlaying) {
+        if (isCurrentlyPlaying) {
           color = "#ef4444" // Red for currently playing
         } else if (isActive) {
           color = "#3b82f6" // Blue for active
@@ -122,12 +126,22 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
         }
 
         ctx.fillStyle = color
-        ctx.fillRect(Math.max(0, startX), y - noteHeight, Math.min(noteWidth, width - startX), noteHeight * 2)
+        ctx.fillRect(
+          Math.max(0, startX),
+          y - noteHeight,
+          Math.min(noteWidth, width - Math.max(0, startX)),
+          noteHeight * 2,
+        )
 
         // Draw note border for better visibility
         ctx.strokeStyle = "#1e293b"
         ctx.lineWidth = 0.5
-        ctx.strokeRect(Math.max(0, startX), y - noteHeight, Math.min(noteWidth, width - startX), noteHeight * 2)
+        ctx.strokeRect(
+          Math.max(0, startX),
+          y - noteHeight,
+          Math.min(noteWidth, width - Math.max(0, startX)),
+          noteHeight * 2,
+        )
       }
     })
 
@@ -135,7 +149,7 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     const currentX = (currentTime - startTime) * pixelsPerSecond
     if (currentX >= 0 && currentX <= width) {
       ctx.strokeStyle = "#ef4444"
-      ctx.lineWidth = 2
+      ctx.lineWidth = 3
       ctx.beginPath()
       ctx.moveTo(currentX, 0)
       ctx.lineTo(currentX, height)
@@ -147,14 +161,23 @@ export default function MidiPlayer({ midiFile, currentTime, isPlaying, activeNot
     ctx.font = "12px monospace"
     ctx.textAlign = "center"
 
-    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 5) {
+    for (let t = Math.floor(startTime); t <= Math.ceil(endTime); t += 2) {
       const x = (t - startTime) * pixelsPerSecond
-      if (x >= 20 && x <= width - 20) {
+      if (x >= 30 && x <= width - 30) {
         const minutes = Math.floor(t / 60)
         const seconds = Math.floor(t % 60)
         ctx.fillText(`${minutes}:${seconds.toString().padStart(2, "0")}`, x, 20)
       }
     }
+
+    // Draw note range labels
+    ctx.textAlign = "left"
+    ctx.font = "10px monospace"
+    noteRanges.forEach((midiNote) => {
+      const y = height - ((midiNote - 21) / (108 - 21)) * height
+      const noteName = Tone.Frequency(midiNote, "midi").toNote()
+      ctx.fillText(noteName, 5, y - 5)
+    })
   }, [midiFile, currentTime, activeNotes, isPlaying])
 
   if (!midiFile) {
