@@ -354,7 +354,7 @@ MIT License — see [LICENSE](LICENSE).
 ## 📱 Support
 
 * GitHub Issues & Discussions
-* Email: \[[your-email@example.com](mailto:your-email@example.com)]
+* Email: \[[your-email@example.com](mailto:veloxineology@gmail.com)]
 * Instagram: [@kaushikieee](https://instagram.com/kaushikieee)
 
 ---
