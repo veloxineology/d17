@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Music } from "lucide-react"
+import { Play, Music, RefreshCw } from "lucide-react"
 
 interface SampleMidiProps {
   onLoadMidi: (file: File) => void
@@ -30,55 +30,66 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
       .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize first letter of each word
   }
 
-  // Load available MIDI samples
-  useEffect(() => {
-    const loadSamples = async () => {
+  // Discover MIDI files in the samples folder
+  const discoverMidiFiles = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Try to fetch a directory listing or manifest file
+      // Since we can't directly list directory contents in the browser,
+      // we'll try a different approach - attempt to fetch common file extensions
+      const availableSamples: MidiSample[] = []
+
+      // We'll try to fetch files and see which ones exist
+      // This is a workaround since we can't list directory contents directly
+
+      // First, try to fetch a manifest file if you create one
       try {
-        setLoading(true)
-
-        // List of MIDI files you'll upload to the samples folder
-        // You can expand this list as you add more files
-        const sampleFiles = [
-          "canon-in-d.mid",
-          "fur-elise.mid",
-          "moonlight-sonata.mid",
-          "claire-de-lune.mid",
-          "turkish-march.mid",
-          "minute-waltz.mid",
-          "prelude-in-c.mid",
-          "gymnopédie-no1.mid",
-        ]
-
-        const availableSamples: MidiSample[] = []
-
-        // Check which files actually exist
-        for (const filename of sampleFiles) {
-          try {
-            const response = await fetch(`/midi-samples/${filename}`, { method: "HEAD" })
-            if (response.ok) {
-              availableSamples.push({
-                name: filename,
-                displayName: formatDisplayName(filename),
-                path: `/midi-samples/${filename}`,
-              })
+        const manifestResponse = await fetch("/midi-samples/manifest.json")
+        if (manifestResponse.ok) {
+          const manifest = await manifestResponse.json()
+          if (Array.isArray(manifest.files)) {
+            for (const filename of manifest.files) {
+              if (filename.match(/\.(mid|midi)$/i)) {
+                try {
+                  const testResponse = await fetch(`/midi-samples/${filename}`, { method: "HEAD" })
+                  if (testResponse.ok) {
+                    availableSamples.push({
+                      name: filename,
+                      displayName: formatDisplayName(filename),
+                      path: `/midi-samples/${filename}`,
+                    })
+                  }
+                } catch {
+                  // File doesn't exist, skip
+                }
+              }
             }
-          } catch (err) {
-            // File doesn't exist, skip it
-            console.log(`Sample ${filename} not found, skipping`)
           }
         }
-
-        setSamples(availableSamples)
-        setError(null)
-      } catch (err) {
-        console.error("Error loading MIDI samples:", err)
-        setError("Failed to load MIDI samples")
-      } finally {
-        setLoading(false)
+      } catch {
+        // No manifest file, that's okay
       }
-    }
 
-    loadSamples()
+      // If no manifest, we can't automatically discover files
+      // The user will need to create a manifest.json file
+      if (availableSamples.length === 0) {
+        console.log("No manifest.json found or no files listed in manifest")
+      }
+
+      setSamples(availableSamples)
+    } catch (err) {
+      console.error("Error discovering MIDI files:", err)
+      setError("Failed to load MIDI samples")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load samples on component mount
+  useEffect(() => {
+    discoverMidiFiles()
   }, [])
 
   // Load a sample MIDI file
@@ -110,33 +121,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="text-slate-400">Loading sample MIDIs...</div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error && samples.length === 0) {
-    return (
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Music className="w-5 h-5" />
-            Sample MIDIs by Kaushik
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <div className="text-slate-400 mb-4">No sample MIDIs found</div>
-            <div className="text-sm text-slate-500 bg-slate-700/50 rounded-lg p-4 max-w-md mx-auto">
-              <strong>Setup Instructions:</strong>
-              <br />
-              Create a folder called{" "}
-              <code className="bg-slate-600 px-2 py-1 rounded text-slate-200">public/midi-samples/</code>
-              <br />
-              Add your MIDI files there (e.g., canon-in-d.mid, fur-elise.mid, etc.)
-            </div>
+            <div className="text-slate-400">Scanning for MIDI files...</div>
           </div>
         </CardContent>
       </Card>
@@ -146,22 +131,58 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
   return (
     <Card className="bg-slate-800/50 border-slate-700">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Music className="w-5 h-5" />
-          Sample MIDIs by Kaushik
+        <CardTitle className="text-white flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            <Music className="w-5 h-5" />
+            Sample MIDIs by Kaushik
+          </div>
+          <Button
+            onClick={discoverMidiFiles}
+            variant="outline"
+            size="sm"
+            className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {samples.length === 0 ? (
           <div className="text-center py-8">
-            <div className="text-slate-400 mb-4">No sample MIDIs available</div>
-            <div className="text-sm text-slate-500">
-              Add MIDI files to the <code className="bg-slate-700 px-2 py-1 rounded">public/midi-samples/</code> folder
+            <div className="text-slate-400 mb-4">No sample MIDIs found</div>
+            <div className="text-sm text-slate-500 bg-slate-700/50 rounded-lg p-4 max-w-2xl mx-auto space-y-3">
+              <div>
+                <strong>Setup Instructions:</strong>
+              </div>
+              <div>
+                1. Create folder:{" "}
+                <code className="bg-slate-600 px-2 py-1 rounded text-slate-200">public/midi-samples/</code>
+              </div>
+              <div>2. Add your MIDI files there (e.g., song1.mid, piece2.midi, etc.)</div>
+              <div>
+                3. Create a <code className="bg-slate-600 px-2 py-1 rounded text-slate-200">manifest.json</code> file:
+              </div>
+              <div className="bg-slate-800 p-3 rounded text-xs font-mono text-left">
+                {`{
+  "files": [
+    "your-song-1.mid",
+    "your-song-2.midi",
+    "another-piece.mid"
+  ]
+}`}
+              </div>
+              <div>
+                4. Click the <strong>Refresh</strong> button above
+              </div>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="text-sm text-slate-400 mb-4">Click any sample below to load and play it:</div>
+            <div className="text-sm text-slate-400 mb-4">
+              Found {samples.length} MIDI file{samples.length !== 1 ? "s" : ""}. Click any sample below to load and play
+              it:
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {samples.map((sample) => {
                 const isCurrentSample = currentMidiName === sample.name
@@ -202,8 +223,8 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             )}
 
             <div className="text-xs text-slate-500 mt-4 p-3 bg-slate-700/30 rounded-lg">
-              <strong>Note:</strong> These are curated classical pieces perfect for testing the piano app. Each file is
-              optimized for the best audio experience with your Salamander Grand Piano samples.
+              <strong>Tip:</strong> Add more MIDI files to the <code>public/midi-samples/</code> folder, update the
+              manifest.json, and click Refresh to see them here.
             </div>
           </div>
         )}
