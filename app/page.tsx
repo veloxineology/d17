@@ -203,7 +203,7 @@ export default function PianoApp() {
                   </Button>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Progress Bar - WITH DEBUGGING */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-slate-300">
                     <span>
@@ -219,11 +219,25 @@ export default function PianoApp() {
                         .padStart(2, "0")}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-700 rounded-full h-2">
+                  {/* Debug info */}
+                  <div className="text-xs text-slate-500">
+                    Debug: currentTime={currentTime.toFixed(2)}s, duration={duration.toFixed(2)}s, progress=
+                    {duration > 0 ? ((currentTime / duration) * 100).toFixed(1) : 0}%
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-3 relative overflow-hidden">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-100"
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-100 relative"
                       style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                    />
+                    >
+                      {/* Add a glowing effect */}
+                      <div className="absolute inset-0 bg-blue-400 opacity-50 rounded-full"></div>
+                    </div>
+                    {/* Add tick marks */}
+                    <div className="absolute inset-0 flex justify-between items-center px-1">
+                      {Array.from({ length: 11 }, (_, i) => (
+                        <div key={i} className="w-px h-2 bg-slate-500 opacity-50"></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
