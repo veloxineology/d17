@@ -102,7 +102,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
       <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300">
         <div className="p-6 sm:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3 text-left">
               <Music className="w-6 h-6" />
               Sample MIDIs by Kaushik
             </h2>
@@ -122,7 +122,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
     <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
       <div className="p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3 text-left">
             <Music className="w-6 h-6" />
             Sample MIDIs by Kaushik
           </h2>
@@ -130,7 +130,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             onClick={discoverMidiFiles}
             variant="outline"
             size="sm"
-            className="glass-button bg-white/30 dark:bg-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-600/50 border-white/40 dark:border-gray-600/40 rounded-xl transition-all duration-200 font-bold backdrop-blur-sm"
+            className="bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-white/70 dark:border-gray-600/70 rounded-xl transition-all duration-200 font-bold text-gray-900 dark:text-white"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Refresh</span>
@@ -142,23 +142,23 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             <div className="text-gray-600 dark:text-gray-300 mb-6 text-lg font-bold">No sample MIDIs found</div>
             <div className="glass-card rounded-2xl p-6 max-w-2xl mx-auto">
               <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
-                <div className="font-black text-gray-900 dark:text-white">Setup Instructions:</div>
+                <div className="font-black text-gray-900 dark:text-white text-left">Setup Instructions:</div>
                 <div className="space-y-2 text-left font-semibold">
                   <div>
                     1. Create folder:{" "}
-                    <code className="bg-white/30 dark:bg-gray-600/30 px-2 py-1 rounded text-xs font-bold backdrop-blur-sm">
+                    <code className="bg-white/40 dark:bg-gray-600/40 px-2 py-1 rounded text-xs font-bold">
                       public/midi-samples/
                     </code>
                   </div>
                   <div>2. Add your MIDI files there</div>
                   <div>
                     3. Create a{" "}
-                    <code className="bg-white/30 dark:bg-gray-600/30 px-2 py-1 rounded text-xs font-bold backdrop-blur-sm">
+                    <code className="bg-white/40 dark:bg-gray-600/40 px-2 py-1 rounded text-xs font-bold">
                       manifest.json
                     </code>{" "}
                     file:
                   </div>
-                  <div className="bg-gray-800/80 dark:bg-gray-900/80 p-4 rounded-xl text-xs font-mono text-green-400 overflow-x-auto backdrop-blur-sm border border-white/10">
+                  <div className="bg-gray-800/90 dark:bg-gray-900/90 p-4 rounded-xl text-xs font-mono text-green-400 overflow-x-auto border border-white/20">
                     {`{
   "files": [
     "your-song.mid"
@@ -186,11 +186,11 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
                     onClick={() => loadSample(sample)}
                     variant="outline"
                     className={`
-                      h-auto p-6 flex flex-col items-start gap-3 text-left rounded-2xl transition-all duration-300 border-2 glass-button backdrop-blur-sm
+                      h-auto p-6 flex flex-col items-start gap-3 text-left rounded-2xl transition-all duration-300 border-2
                       ${
                         isCurrentSample
-                          ? "bg-blue-500/80 hover:bg-blue-600/80 text-white border-blue-500/60 shadow-lg scale-105"
-                          : "bg-white/30 dark:bg-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-600/50 text-gray-900 dark:text-white border-white/40 dark:border-gray-600/40 hover:shadow-lg hover:scale-105"
+                          ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500 shadow-lg scale-105"
+                          : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 text-gray-900 dark:text-white border-white/70 dark:border-gray-600/70 hover:shadow-lg hover:scale-105"
                       }
                       ${isPlaying ? "animate-pulse" : ""}
                     `}
@@ -209,7 +209,7 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm mt-4 p-4 bg-red-50/80 dark:bg-red-900/20 rounded-2xl border border-red-200/50 dark:border-red-800/50 font-bold backdrop-blur-sm">
+              <div className="text-red-500 text-sm mt-4 p-4 bg-red-50/80 dark:bg-red-900/30 rounded-2xl border border-red-200/60 dark:border-red-800/60 font-bold">
                 {error}
               </div>
             )}
