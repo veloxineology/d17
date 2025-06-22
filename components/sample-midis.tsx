@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Play, Music, RefreshCw } from "lucide-react"
 
@@ -100,74 +99,78 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
 
   if (loading) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center gap-2 text-lg">
-            <Music className="w-5 h-5" />
-            Sample MIDIs by Kaushik
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-6">
-            <div className="text-slate-400 text-sm">Scanning for MIDI files...</div>
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl transition-all duration-300">
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+              <Music className="w-6 h-6" />
+              Sample MIDIs by Kaushik
+            </h2>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-gray-600 dark:text-gray-300 text-sm">Scanning for MIDI files...</div>
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-white flex items-center gap-2 justify-between text-lg">
-          <div className="flex items-center gap-2">
-            <Music className="w-5 h-5" />
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl transition-all duration-300 hover:shadow-2xl">
+      <div className="p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+            <Music className="w-6 h-6" />
             Sample MIDIs by Kaushik
-          </div>
+          </h2>
           <Button
             onClick={discoverMidiFiles}
             variant="outline"
             size="sm"
-            className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600 text-xs"
+            className="bg-white/50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600 rounded-xl transition-all duration-200"
           >
-            <RefreshCw className="w-3 h-3 mr-1" />
+            <RefreshCw className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </div>
+
         {samples.length === 0 ? (
-          <div className="text-center py-6">
-            <div className="text-slate-400 mb-4 text-sm">No sample MIDIs found</div>
-            <details className="text-xs sm:text-sm text-slate-500 bg-slate-700/50 rounded-lg p-4 max-w-2xl mx-auto">
-              <summary className="cursor-pointer font-medium mb-3">Setup Instructions</summary>
-              <div className="space-y-2 text-left">
-                <div>
-                  1. Create folder:{" "}
-                  <code className="bg-slate-600 px-2 py-1 rounded text-slate-200 text-xs">public/midi-samples/</code>
-                </div>
-                <div>2. Add your MIDI files there</div>
-                <div>
-                  3. Create a{" "}
-                  <code className="bg-slate-600 px-2 py-1 rounded text-slate-200 text-xs">manifest.json</code> file:
-                </div>
-                <div className="bg-slate-800 p-3 rounded text-xs font-mono text-left overflow-x-auto">
-                  {`{
+          <div className="text-center py-12">
+            <div className="text-gray-600 dark:text-gray-300 mb-6 text-lg">No sample MIDIs found</div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6 max-w-2xl mx-auto">
+              <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+                <div className="font-semibold text-gray-900 dark:text-white">Setup Instructions:</div>
+                <div className="space-y-2 text-left">
+                  <div>
+                    1. Create folder:{" "}
+                    <code className="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded text-xs">public/midi-samples/</code>
+                  </div>
+                  <div>2. Add your MIDI files there</div>
+                  <div>
+                    3. Create a{" "}
+                    <code className="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded text-xs">manifest.json</code> file:
+                  </div>
+                  <div className="bg-gray-800 dark:bg-gray-900 p-4 rounded-xl text-xs font-mono text-green-400 overflow-x-auto">
+                    {`{
   "files": [
     "your-song.mid"
   ]
 }`}
+                  </div>
+                  <div>4. Click Refresh</div>
                 </div>
-                <div>4. Click Refresh</div>
               </div>
-            </details>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="text-xs sm:text-sm text-slate-400 mb-4">
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
               Found {samples.length} MIDI file{samples.length !== 1 ? "s" : ""}. Tap any sample to load and play:
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {samples.map((sample) => {
                 const isCurrentSample = currentMidiName === sample.name
                 const isPlaying = isCurrentSample && isCurrentlyPlaying
@@ -176,24 +179,24 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
                   <Button
                     key={sample.name}
                     onClick={() => loadSample(sample)}
-                    variant={isCurrentSample ? "default" : "outline"}
+                    variant="outline"
                     className={`
-                      h-auto p-3 sm:p-4 flex flex-col items-start gap-2 text-left
+                      h-auto p-6 flex flex-col items-start gap-3 text-left rounded-2xl transition-all duration-300 border-2
                       ${
                         isCurrentSample
-                          ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-500"
-                          : "bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600"
+                          ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500 shadow-lg scale-105"
+                          : "bg-white/50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:shadow-lg hover:scale-105"
                       }
                       ${isPlaying ? "animate-pulse" : ""}
                     `}
                   >
-                    <div className="flex items-center gap-2 w-full">
-                      <Play className={`w-4 h-4 ${isPlaying ? "text-green-400" : ""}`} />
-                      <span className="font-medium truncate flex-1 text-sm">{sample.displayName}</span>
+                    <div className="flex items-center gap-3 w-full">
+                      <Play className={`w-5 h-5 ${isPlaying ? "text-green-300" : ""}`} />
+                      <span className="font-semibold truncate flex-1">{sample.displayName}</span>
                     </div>
                     <div className="text-xs opacity-75 truncate w-full">{sample.name}</div>
                     {isCurrentSample && (
-                      <div className="text-xs text-blue-200 font-medium">{isPlaying ? "♪ Playing" : "● Loaded"}</div>
+                      <div className="text-xs font-medium">{isPlaying ? "♪ Playing" : "● Loaded"}</div>
                     )}
                   </Button>
                 )
@@ -201,17 +204,17 @@ export default function SampleMidis({ onLoadMidi, isCurrentlyPlaying, currentMid
             </div>
 
             {error && (
-              <div className="text-red-400 text-sm mt-4 p-3 bg-red-900/20 rounded-lg border border-red-800">
+              <div className="text-red-500 text-sm mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
                 {error}
               </div>
             )}
 
-            <div className="text-xs text-slate-500 mt-4 p-3 bg-slate-700/30 rounded-lg">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-6 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl text-center">
               <strong>Tip:</strong> Add more MIDI files to the folder, update manifest.json, and tap Refresh.
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
