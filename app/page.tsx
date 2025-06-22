@@ -135,38 +135,35 @@ export default function PianoApp() {
         showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
-      {/* Enhanced Animated Background Elements - More Visible */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Primary floating orbs - More visible */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/30 to-purple-400/30 dark:from-blue-500/40 dark:to-purple-500/40 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-400/30 to-pink-400/30 dark:from-purple-500/40 dark:to-pink-500/40 rounded-full blur-3xl animate-float-medium"></div>
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/30 to-blue-400/30 dark:from-pink-500/40 dark:to-blue-500/40 rounded-full blur-3xl animate-float-fast"></div>
+      {/* Clean Animated Background Elements - Behind Content */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        {/* Primary floating orbs - Clean and elegant */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/25 to-purple-400/25 dark:from-blue-500/35 dark:to-purple-500/35 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-400/25 to-pink-400/25 dark:from-purple-500/35 dark:to-pink-500/35 rounded-full blur-3xl animate-float-medium"></div>
+        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/25 to-blue-400/25 dark:from-pink-500/35 dark:to-blue-500/35 rounded-full blur-3xl animate-float-fast"></div>
 
-        {/* Secondary smaller orbs - More visible */}
-        <div className="absolute top-1/2 left-1/6 w-48 h-48 bg-gradient-to-r from-cyan-400/25 to-blue-400/25 dark:from-cyan-500/35 dark:to-blue-500/35 rounded-full blur-2xl animate-float-reverse"></div>
-        <div className="absolute bottom-1/3 left-3/4 w-32 h-32 bg-gradient-to-r from-violet-400/25 to-purple-400/25 dark:from-violet-500/35 dark:to-purple-500/35 rounded-full blur-xl animate-float-slow"></div>
-        <div className="absolute top-1/6 right-1/3 w-40 h-40 bg-gradient-to-r from-indigo-400/25 to-cyan-400/25 dark:from-indigo-500/35 dark:to-cyan-500/35 rounded-full blur-2xl animate-float-medium"></div>
+        {/* Secondary smaller orbs for depth */}
+        <div className="absolute top-1/2 left-1/6 w-48 h-48 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 dark:from-cyan-500/30 dark:to-blue-500/30 rounded-full blur-2xl animate-float-reverse"></div>
+        <div className="absolute bottom-1/3 left-3/4 w-32 h-32 bg-gradient-to-r from-violet-400/20 to-purple-400/20 dark:from-violet-500/30 dark:to-purple-500/30 rounded-full blur-xl animate-float-slow"></div>
+        <div className="absolute top-1/6 right-1/3 w-40 h-40 bg-gradient-to-r from-indigo-400/20 to-cyan-400/20 dark:from-indigo-500/30 dark:to-cyan-500/30 rounded-full blur-2xl animate-float-medium"></div>
 
-        {/* Subtle moving lines - More visible */}
+        {/* Elegant moving lines */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/40 dark:via-blue-500/60 to-transparent animate-slide-right"></div>
-          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/40 dark:via-purple-500/60 to-transparent animate-slide-left"></div>
-          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-pink-400/35 dark:via-pink-500/55 to-transparent animate-slide-right-slow"></div>
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/30 dark:via-blue-500/50 to-transparent animate-slide-right"></div>
+          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/30 dark:via-purple-500/50 to-transparent animate-slide-left"></div>
+          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-pink-400/25 dark:via-pink-500/45 to-transparent animate-slide-right-slow"></div>
         </div>
 
-        {/* Floating particles - More visible */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className={`absolute w-3 h-3 bg-blue-400/60 dark:bg-blue-500/80 rounded-full animate-float-particle-${i % 3}`}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${8 + Math.random() * 4}s`,
-            }}
-          />
-        ))}
+        {/* Subtle gradient overlays for extra depth */}
+        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-radial from-blue-400/10 dark:from-blue-500/15 to-transparent animate-pulse-slow"></div>
+        <div
+          className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-gradient-radial from-purple-400/10 dark:from-purple-500/15 to-transparent animate-pulse-slow"
+          style={{ animationDelay: "3s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/4 h-1/4 bg-gradient-radial from-pink-400/8 dark:from-pink-500/12 to-transparent animate-pulse-slow"
+          style={{ animationDelay: "6s" }}
+        ></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
