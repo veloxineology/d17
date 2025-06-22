@@ -8,7 +8,7 @@ import * as Tone from "tone"
 export function usePiano() {
   const [soundEngine, setSoundEngine] = useState<SoundEngine | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [volume, setVolumeState] = useState(0.7)
+  const [volume, setVolumeState] = useState(0.85) // Increased default volume to 85%
   const [sustainPedal, setSustainPedalState] = useState(false)
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set())
   const [midiFile, setMidiFile] = useState<Midi | null>(null)
@@ -32,9 +32,9 @@ export function usePiano() {
     return `${cleanNoteName}${cleanOctave}`
   }, [])
 
-  // Initialize sound engine
+  // Initialize sound engine with higher default volume
   useEffect(() => {
-    const engine = new SoundEngine({ volume })
+    const engine = new SoundEngine({ volume: 0.85 }) // Start with 85% volume
     setSoundEngine(engine)
 
     engine.waitForLoad().then(() => {
@@ -64,9 +64,10 @@ export function usePiano() {
     [soundEngine],
   )
 
-  // Press note
+  // Press note with higher default velocity
   const pressNote = useCallback(
-    (note: string, velocity = 0.8) => {
+    (note: string, velocity = 0.9) => {
+      // Increased default velocity from 0.8 to 0.9
       if (!soundEngine) return
       soundEngine.pressNote(note, velocity)
       setActiveNotes((prev) => new Set(prev).add(note))
@@ -123,7 +124,7 @@ export function usePiano() {
     setActiveNotes(new Set())
   }, [releaseNote])
 
-  // FIXED: Use setInterval instead of requestAnimationFrame for more reliable updates
+  // Time tracking with setInterval
   const startTimeTracking = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -148,10 +149,10 @@ export function usePiano() {
           clearScheduledEvents()
         }
       }
-    }, 50) // Update every 50ms for smooth progress
+    }, 50)
   }, [duration, clearScheduledEvents])
 
-  // Play MIDI - COMPLETELY REWRITTEN
+  // Play MIDI with boosted velocity
   const playMidi = useCallback(async () => {
     if (!midiFile || !soundEngine || isPlaying) {
       console.warn("Cannot start playback:", { midiFile: !!midiFile, soundEngine: !!soundEngine, isPlaying })
@@ -166,10 +167,8 @@ export function usePiano() {
 
       console.log("🎵 Starting MIDI playback from time:", playbackOffset.current)
 
-      // Clear any existing scheduled events
       clearScheduledEvents()
 
-      // Collect all notes from all tracks
       const allNotes: Array<{
         time: number
         duration: number
@@ -186,7 +185,7 @@ export function usePiano() {
                 time: note.time,
                 duration: note.duration,
                 note: fixedNoteName,
-                velocity: note.velocity,
+                velocity: Math.max(0.7, note.velocity * 1.2), // Boost MIDI velocity by 20% with minimum of 0.7
               })
             }
           })
@@ -201,17 +200,13 @@ export function usePiano() {
 
       allNotes.sort((a, b) => a.time - b.time)
 
-      // CRITICAL: Set timing and state in the right order
       playbackStartTime.current = Date.now()
       setIsPlaying(true)
-
-      // Start time tracking IMMEDIATELY
       startTimeTracking()
 
-      console.log("✅ Playback started at:", new Date(playbackStartTime.current).toISOString())
-      console.log("✅ Time tracking started")
+      console.log("✅ Playback started with boosted velocities")
 
-      // Schedule note events
+      // Schedule note events with boosted velocity
       let scheduledCount = 0
       allNotes.forEach((noteEvent) => {
         const startDelay = (noteEvent.time - playbackOffset.current) * 1000
@@ -219,7 +214,9 @@ export function usePiano() {
 
         if (startDelay >= 0) {
           const noteOnTimeout = setTimeout(() => {
-            console.log(`🎵 Playing: ${noteEvent.note} at ${noteEvent.time.toFixed(2)}s`)
+            console.log(
+              `🎵 Playing: ${noteEvent.note} at ${noteEvent.time.toFixed(2)}s with velocity ${noteEvent.velocity.toFixed(2)}`,
+            )
             pressNote(noteEvent.note, noteEvent.velocity)
           }, startDelay)
 
