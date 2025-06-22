@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
@@ -39,6 +39,27 @@ export default function PianoApp() {
   const [selectedOctave, setSelectedOctave] = useState(4)
   const [currentMidiName, setCurrentMidiName] = useState<string>()
   const [showLoadingScreen, setShowLoadingScreen] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Preload and prepare the main UI
+  useEffect(() => {
+    // Preload critical resources
+    const preloadResources = async () => {
+      // Preload any critical assets here if needed
+      await new Promise((resolve) => setTimeout(resolve, 100)) // Small delay to ensure smooth rendering
+    }
+
+    preloadResources()
+  }, [])
+
+  const handleLoadingComplete = () => {
+    setIsTransitioning(true)
+    // Seamless transition with minimal delay
+    setTimeout(() => {
+      setShowLoadingScreen(false)
+      setIsTransitioning(false)
+    }, 100) // Very short delay for seamless transition
+  }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -81,9 +102,10 @@ export default function PianoApp() {
 
   // Show loading screen first
   if (showLoadingScreen) {
-    return <LoadingScreen onComplete={() => setShowLoadingScreen(false)} />
+    return <LoadingScreen onComplete={handleLoadingComplete} />
   }
 
+  // Show loading state for piano samples
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl flex items-center justify-center p-4">
@@ -98,7 +120,11 @@ export default function PianoApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-300">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-300 ${
+        isTransitioning ? "opacity-0" : "opacity-100"
+      }`}
+    >
       {/* Floating background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
