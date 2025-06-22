@@ -30,17 +30,17 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
   const handleEnter = () => {
     setIsAnimating(true)
-    // Wait for animation to complete before calling onComplete
+    // Reduced delay for seamless transition
     setTimeout(() => {
       onComplete()
-    }, 2000)
+    }, 1500) // Reduced from 2000ms to 1500ms
   }
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Background with glass effect */}
       <div
-        className={`absolute inset-0 transition-all duration-2000 ease-in-out ${
+        className={`absolute inset-0 transition-all duration-1500 ease-in-out ${
           isAnimating ? "scale-150 opacity-0" : "scale-100 opacity-100"
         }`}
         style={{
@@ -56,7 +56,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           {/* D17 Logo with proper masking */}
           <div className="relative">
             <div
-              className={`transition-all duration-2000 ease-in-out ${
+              className={`transition-all duration-1500 ease-in-out ${
                 isAnimating ? "scale-[25] opacity-0" : "scale-100 opacity-100"
               }`}
               style={{
@@ -75,30 +75,29 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 D17
               </h1>
             </div>
-
-            {/* Animated underline with glass effect */}
-            <div
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-2 bg-gradient-to-r from-blue-500/80 to-purple-500/80 rounded-full transition-all duration-1000 backdrop-blur-sm"
-              style={{
-                width: `${progress}%`,
-                boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
-              }}
-            ></div>
           </div>
 
-          {/* Tagline with glass effect */}
+          {/* Updated tagline with link */}
           <p
-            className={`text-xl sm:text-2xl font-bold text-gray-700 dark:text-gray-200 transition-all duration-1000 delay-500 ${
+            className={`text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-200 transition-all duration-1000 delay-500 ${
               progress > 30 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
             style={{
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
             }}
           >
-            Where Notes Fall in Love
+            Made with ❤️ by{" "}
+            <a
+              href="https://instagram.com/kaushikieee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 font-black underline decoration-2 underline-offset-2"
+            >
+              Kaushik
+            </a>
           </p>
 
-          {/* Glass Loading Progress */}
+          {/* Single Glass Loading Progress */}
           <div className="space-y-4">
             <div className="w-full bg-white/20 dark:bg-black/20 rounded-full h-3 overflow-hidden backdrop-blur-sm border border-white/30 dark:border-white/10">
               <div
