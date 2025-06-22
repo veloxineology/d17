@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
@@ -40,6 +40,10 @@ export default function PianoApp() {
   const [currentMidiName, setCurrentMidiName] = useState<string>()
   const [showLoadingScreen, setShowLoadingScreen] = useState(true)
   const [showMainApp, setShowMainApp] = useState(false)
+
+  // Refs for scrollable elements
+  const progressContainerRef = useRef<HTMLDivElement>(null)
+  const visualizerContainerRef = useRef<HTMLDivElement>(null)
 
   const handleLoadingComplete = () => {
     setShowLoadingScreen(false)
@@ -88,6 +92,22 @@ export default function PianoApp() {
     console.log(`Clicked at ${(percentage * 100).toFixed(1)}% - ${newTime.toFixed(2)}s`)
   }
 
+  // Scroll handlers for progress bar
+  const handleProgressWheel = useCallback((event: React.WheelEvent) => {
+    if (progressContainerRef.current) {
+      event.preventDefault()
+      progressContainerRef.current.scrollLeft += event.deltaY
+    }
+  }, [])
+
+  // Scroll handlers for visualizer
+  const handleVisualizerWheel = useCallback((event: React.WheelEvent) => {
+    if (visualizerContainerRef.current) {
+      event.preventDefault()
+      visualizerContainerRef.current.scrollLeft += event.deltaY
+    }
+  }, [])
+
   // Show loading screen first
   if (showLoadingScreen) {
     return <LoadingScreen onComplete={handleLoadingComplete} />
@@ -115,30 +135,30 @@ export default function PianoApp() {
         showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
-      {/* Enhanced Animated Background Elements */}
+      {/* Enhanced Animated Background Elements - More Visible */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Primary floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/15 to-purple-400/15 dark:from-blue-500/20 dark:to-purple-500/20 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-400/15 to-pink-400/15 dark:from-purple-500/20 dark:to-pink-500/20 rounded-full blur-3xl animate-float-medium"></div>
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/15 to-blue-400/15 dark:from-pink-500/20 dark:to-blue-500/20 rounded-full blur-3xl animate-float-fast"></div>
+        {/* Primary floating orbs - More visible */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/30 to-purple-400/30 dark:from-blue-500/40 dark:to-purple-500/40 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-400/30 to-pink-400/30 dark:from-purple-500/40 dark:to-pink-500/40 rounded-full blur-3xl animate-float-medium"></div>
+        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/30 to-blue-400/30 dark:from-pink-500/40 dark:to-blue-500/40 rounded-full blur-3xl animate-float-fast"></div>
 
-        {/* Secondary smaller orbs */}
-        <div className="absolute top-1/2 left-1/6 w-48 h-48 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 dark:from-cyan-500/15 dark:to-blue-500/15 rounded-full blur-2xl animate-float-reverse"></div>
-        <div className="absolute bottom-1/3 left-3/4 w-32 h-32 bg-gradient-to-r from-violet-400/10 to-purple-400/10 dark:from-violet-500/15 dark:to-purple-500/15 rounded-full blur-xl animate-float-slow"></div>
-        <div className="absolute top-1/6 right-1/3 w-40 h-40 bg-gradient-to-r from-indigo-400/10 to-cyan-400/10 dark:from-indigo-500/15 dark:to-cyan-500/15 rounded-full blur-2xl animate-float-medium"></div>
+        {/* Secondary smaller orbs - More visible */}
+        <div className="absolute top-1/2 left-1/6 w-48 h-48 bg-gradient-to-r from-cyan-400/25 to-blue-400/25 dark:from-cyan-500/35 dark:to-blue-500/35 rounded-full blur-2xl animate-float-reverse"></div>
+        <div className="absolute bottom-1/3 left-3/4 w-32 h-32 bg-gradient-to-r from-violet-400/25 to-purple-400/25 dark:from-violet-500/35 dark:to-purple-500/35 rounded-full blur-xl animate-float-slow"></div>
+        <div className="absolute top-1/6 right-1/3 w-40 h-40 bg-gradient-to-r from-indigo-400/25 to-cyan-400/25 dark:from-indigo-500/35 dark:to-cyan-500/35 rounded-full blur-2xl animate-float-medium"></div>
 
-        {/* Subtle moving lines */}
+        {/* Subtle moving lines - More visible */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/20 dark:via-blue-500/30 to-transparent animate-slide-right"></div>
-          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/20 dark:via-purple-500/30 to-transparent animate-slide-left"></div>
-          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-pink-400/15 dark:via-pink-500/25 to-transparent animate-slide-right-slow"></div>
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/40 dark:via-blue-500/60 to-transparent animate-slide-right"></div>
+          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/40 dark:via-purple-500/60 to-transparent animate-slide-left"></div>
+          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-pink-400/35 dark:via-pink-500/55 to-transparent animate-slide-right-slow"></div>
         </div>
 
-        {/* Floating particles */}
+        {/* Floating particles - More visible */}
         {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
-            className={`absolute w-2 h-2 bg-blue-400/30 dark:bg-blue-500/40 rounded-full animate-float-particle-${i % 3}`}
+            className={`absolute w-3 h-3 bg-blue-400/60 dark:bg-blue-500/80 rounded-full animate-float-particle-${i % 3}`}
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -228,7 +248,7 @@ export default function PianoApp() {
                 </div>
               </div>
 
-              {/* Sustain Pedal - Fixed Border Visibility */}
+              {/* Sustain Pedal - Fixed Border Visibility for Light Mode */}
               <div className="space-y-3">
                 <Label className="text-gray-900 dark:text-white font-black">Sustain Pedal</Label>
                 <Button
@@ -237,7 +257,7 @@ export default function PianoApp() {
                   className={`w-full transition-all duration-200 font-bold border-2 ${
                     sustainPedal
                       ? "bg-green-500 hover:bg-green-600 text-white shadow-lg border-green-500 hover:border-green-600"
-                      : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400 text-gray-900 dark:text-white"
+                      : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-gray-600 dark:border-gray-400 hover:border-gray-700 dark:hover:border-gray-300 text-gray-900 dark:text-white"
                   }`}
                 >
                   {sustainPedal ? "ON" : "OFF"}
@@ -363,42 +383,62 @@ export default function PianoApp() {
                     </span>
                   </div>
 
-                  {/* Fixed Scrollable Progress Container */}
-                  <div className="w-full overflow-x-auto">
-                    <div style={{ width: "max(100%, 800px)" }}>
-                      <div
-                        className="relative w-full h-3 bg-white/30 dark:bg-gray-700/40 rounded-full cursor-pointer transition-all duration-200 hover:h-4 group border border-white/40 dark:border-gray-600/40"
-                        onClick={handleProgressClick}
-                      >
+                  {/* Scrollable Progress Container with Instructions */}
+                  <div className="space-y-2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center font-bold">
+                      Scroll horizontally to navigate • Mouse wheel to scroll
+                    </div>
+                    <div
+                      ref={progressContainerRef}
+                      className="w-full overflow-x-auto cursor-grab active:cursor-grabbing"
+                      onWheel={handleProgressWheel}
+                      style={{ scrollbarWidth: "thin" }}
+                    >
+                      <div style={{ width: "max(100%, 1200px)" }}>
                         <div
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-100 shadow-lg"
-                          style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                          className="relative w-full h-4 bg-white/30 dark:bg-gray-700/40 rounded-full cursor-pointer transition-all duration-200 hover:h-5 group border border-white/40 dark:border-gray-600/40"
+                          onClick={handleProgressClick}
                         >
-                          {/* Playhead */}
-                          <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-blue-500 opacity-0 group-hover:opacity-100 transition-all duration-200"></div>
-                        </div>
+                          <div
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-100 shadow-lg"
+                            style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                          >
+                            {/* Playhead */}
+                            <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-lg border-2 border-blue-500 opacity-0 group-hover:opacity-100 transition-all duration-200"></div>
+                          </div>
 
-                        {/* Progress indicators */}
-                        <div className="absolute inset-0 flex justify-between items-center px-2 pointer-events-none">
-                          {Array.from({ length: 21 }, (_, i) => (
-                            <div key={i} className="w-px h-2 bg-white/50 dark:bg-gray-500/50 opacity-40"></div>
-                          ))}
+                          {/* Progress indicators */}
+                          <div className="absolute inset-0 flex justify-between items-center px-2 pointer-events-none">
+                            {Array.from({ length: 41 }, (_, i) => (
+                              <div key={i} className="w-px h-3 bg-white/50 dark:bg-gray-500/50 opacity-40"></div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Fixed Scrollable MIDI Visualizer */}
-                <div className="rounded-2xl overflow-hidden shadow-inner bg-gray-900/90 border border-white/20">
-                  <div className="w-full overflow-x-auto">
-                    <div style={{ width: "max(100%, 1200px)", height: "192px" }}>
-                      <MidiPlayer
-                        midiFile={midiFile}
-                        currentTime={currentTime}
-                        isPlaying={isPlaying}
-                        activeNotes={activeNotes}
-                      />
+                {/* Scrollable MIDI Visualizer */}
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center font-bold">
+                    Scroll horizontally to navigate visualization • Mouse wheel to scroll
+                  </div>
+                  <div className="rounded-2xl overflow-hidden shadow-inner bg-gray-900/90 border border-white/20">
+                    <div
+                      ref={visualizerContainerRef}
+                      className="w-full overflow-x-auto cursor-grab active:cursor-grabbing"
+                      onWheel={handleVisualizerWheel}
+                      style={{ scrollbarWidth: "thin" }}
+                    >
+                      <div style={{ width: "max(100%, 1800px)", height: "192px" }}>
+                        <MidiPlayer
+                          midiFile={midiFile}
+                          currentTime={currentTime}
+                          isPlaying={isPlaying}
+                          activeNotes={activeNotes}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
