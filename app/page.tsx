@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
@@ -39,26 +39,14 @@ export default function PianoApp() {
   const [selectedOctave, setSelectedOctave] = useState(4)
   const [currentMidiName, setCurrentMidiName] = useState<string>()
   const [showLoadingScreen, setShowLoadingScreen] = useState(true)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-
-  // Preload and prepare the main UI
-  useEffect(() => {
-    // Preload critical resources
-    const preloadResources = async () => {
-      // Preload any critical assets here if needed
-      await new Promise((resolve) => setTimeout(resolve, 100)) // Small delay to ensure smooth rendering
-    }
-
-    preloadResources()
-  }, [])
+  const [showMainApp, setShowMainApp] = useState(false)
 
   const handleLoadingComplete = () => {
-    setIsTransitioning(true)
-    // Seamless transition with minimal delay
+    setShowLoadingScreen(false)
+    // Small delay to ensure smooth transition
     setTimeout(() => {
-      setShowLoadingScreen(false)
-      setIsTransitioning(false)
-    }, 100) // Very short delay for seamless transition
+      setShowMainApp(true)
+    }, 50)
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +96,9 @@ export default function PianoApp() {
   // Show loading state for piano samples
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl flex items-center justify-center p-4">
+      <div
+        className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl flex items-center justify-center p-4 transition-all duration-1000 ${showMainApp ? "opacity-100" : "opacity-0"}`}
+      >
         <div className="glass-card p-8 rounded-3xl">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-12 h-12 border-4 border-blue-500/60 border-t-transparent rounded-full animate-spin backdrop-blur-sm"></div>
@@ -121,8 +111,8 @@ export default function PianoApp() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-300 ${
-        isTransitioning ? "opacity-0" : "opacity-100"
+      className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-1000 ease-out ${
+        showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
       {/* Floating background elements */}
@@ -134,7 +124,9 @@ export default function PianoApp() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Header - Left Aligned with Theme Toggle */}
-        <div className="flex items-center justify-between animate-fade-in">
+        <div
+          className={`flex items-center justify-between transition-all duration-1000 delay-100 ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <div className="text-left space-y-2">
             <h1
               className="text-5xl sm:text-6xl font-black tracking-tight bg-gradient-to-br from-gray-900 via-blue-800 to-purple-900 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
@@ -153,7 +145,9 @@ export default function PianoApp() {
         </div>
 
         {/* Main Controls - Fixed Button Visibility */}
-        <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
+        <div
+          className={`glass-card rounded-3xl shadow-2xl transition-all duration-1000 delay-200 hover:shadow-3xl ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <div className="p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left">Controls</h2>
@@ -239,7 +233,9 @@ export default function PianoApp() {
         </div>
 
         {/* Piano Keyboard */}
-        <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
+        <div
+          className={`glass-card rounded-3xl shadow-2xl transition-all duration-1000 delay-300 hover:shadow-3xl ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <div className="p-6 sm:p-8">
             <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left mb-6">Piano Keyboard</h2>
             <PianoKeyboard
@@ -252,10 +248,16 @@ export default function PianoApp() {
         </div>
 
         {/* Sample MIDIs */}
-        <SampleMidis onLoadMidi={handleSampleLoad} isCurrentlyPlaying={isPlaying} currentMidiName={currentMidiName} />
+        <div
+          className={`transition-all duration-1000 delay-400 ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
+          <SampleMidis onLoadMidi={handleSampleLoad} isCurrentlyPlaying={isPlaying} currentMidiName={currentMidiName} />
+        </div>
 
         {/* MIDI Player */}
-        <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
+        <div
+          className={`glass-card rounded-3xl shadow-2xl transition-all duration-1000 delay-500 hover:shadow-3xl ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <div className="p-6 sm:p-8">
             <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left mb-6">MIDI Player</h2>
 
@@ -379,7 +381,9 @@ export default function PianoApp() {
         </div>
 
         {/* How to Play - Left Aligned */}
-        <div className="space-y-6 animate-fade-in">
+        <div
+          className={`space-y-6 transition-all duration-1000 delay-600 ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <h2 className="text-3xl font-black text-left bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             How to Play
           </h2>
@@ -434,7 +438,9 @@ export default function PianoApp() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-8 border-t border-white/20 dark:border-gray-700/30 backdrop-blur-sm">
+        <footer
+          className={`text-center py-8 border-t border-white/20 dark:border-gray-700/30 backdrop-blur-sm transition-all duration-1000 delay-700 ${showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+        >
           <p className="text-gray-500 dark:text-gray-400 text-sm font-bold">
             Made with ❤️ by{" "}
             <a
