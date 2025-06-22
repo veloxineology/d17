@@ -30,18 +30,18 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
   const handleEnter = () => {
     setIsAnimating(true)
-    // Reduced delay for seamless transition
+    // Immediate transition for seamless experience
     setTimeout(() => {
       onComplete()
-    }, 1500) // Reduced from 2000ms to 1500ms
+    }, 800) // Much faster transition
   }
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Background with glass effect */}
       <div
-        className={`absolute inset-0 transition-all duration-1500 ease-in-out ${
-          isAnimating ? "scale-150 opacity-0" : "scale-100 opacity-100"
+        className={`absolute inset-0 transition-all duration-800 ease-in-out ${
+          isAnimating ? "opacity-0" : "opacity-100"
         }`}
         style={{
           background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))",
@@ -53,15 +53,12 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       {/* Content Container */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center space-y-8 max-w-md mx-auto px-6 z-10">
-          {/* D17 Logo with proper masking */}
+          {/* D17 Logo - Fade out instead of scale */}
           <div className="relative">
             <div
-              className={`transition-all duration-1500 ease-in-out ${
-                isAnimating ? "scale-[25] opacity-0" : "scale-100 opacity-100"
+              className={`transition-all duration-800 ease-in-out ${
+                isAnimating ? "opacity-0 scale-95" : "scale-100 opacity-100"
               }`}
-              style={{
-                transformOrigin: "center center",
-              }}
             >
               <h1
                 className={`text-8xl sm:text-9xl font-black tracking-tight transition-all duration-1000 bg-gradient-to-br from-gray-900 via-blue-800 to-purple-900 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent ${
@@ -77,11 +74,11 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
             </div>
           </div>
 
-          {/* Updated tagline with link */}
+          {/* Updated tagline with link - NO UNDERLINE */}
           <p
-            className={`text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-200 transition-all duration-1000 delay-500 ${
+            className={`text-lg sm:text-xl font-bold text-gray-700 dark:text-gray-200 transition-all duration-800 delay-100 ${
               progress > 30 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
+            } ${isAnimating ? "opacity-0 translate-y-4" : ""}`}
             style={{
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
             }}
@@ -91,14 +88,17 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
               href="https://instagram.com/kaushikieee"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 font-black underline decoration-2 underline-offset-2"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 font-black no-underline"
+              style={{ textDecoration: "none" }}
             >
               Kaushik
             </a>
           </p>
 
           {/* Single Glass Loading Progress */}
-          <div className="space-y-4">
+          <div
+            className={`space-y-4 transition-all duration-800 delay-200 ${isAnimating ? "opacity-0 translate-y-4" : ""}`}
+          >
             <div className="w-full bg-white/20 dark:bg-black/20 rounded-full h-3 overflow-hidden backdrop-blur-sm border border-white/30 dark:border-white/10">
               <div
                 className="h-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
@@ -117,8 +117,8 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           {/* Glass Enter Button */}
           {showEnterButton && (
             <div
-              className={`transition-all duration-500 ${
-                showEnterButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              className={`transition-all duration-800 delay-300 ${
+                showEnterButton && !isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               }`}
             >
               <Button
@@ -135,7 +135,9 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           )}
 
           {/* Floating musical notes with glass effect */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className={`absolute inset-0 pointer-events-none overflow-hidden transition-all duration-800 ${isAnimating ? "opacity-0" : ""}`}
+          >
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
