@@ -111,15 +111,42 @@ export default function PianoApp() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-1000 ease-out ${
+      className={`min-h-screen bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-gray-900/90 dark:via-blue-900/50 dark:to-purple-900/50 backdrop-blur-3xl transition-all duration-1000 ease-out relative overflow-hidden ${
         showMainApp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
-      {/* Floating background elements */}
+      {/* Enhanced Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        {/* Primary floating orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/15 to-purple-400/15 dark:from-blue-500/20 dark:to-purple-500/20 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-400/15 to-pink-400/15 dark:from-purple-500/20 dark:to-pink-500/20 rounded-full blur-3xl animate-float-medium"></div>
+        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/15 to-blue-400/15 dark:from-pink-500/20 dark:to-blue-500/20 rounded-full blur-3xl animate-float-fast"></div>
+
+        {/* Secondary smaller orbs */}
+        <div className="absolute top-1/2 left-1/6 w-48 h-48 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 dark:from-cyan-500/15 dark:to-blue-500/15 rounded-full blur-2xl animate-float-reverse"></div>
+        <div className="absolute bottom-1/3 left-3/4 w-32 h-32 bg-gradient-to-r from-violet-400/10 to-purple-400/10 dark:from-violet-500/15 dark:to-purple-500/15 rounded-full blur-xl animate-float-slow"></div>
+        <div className="absolute top-1/6 right-1/3 w-40 h-40 bg-gradient-to-r from-indigo-400/10 to-cyan-400/10 dark:from-indigo-500/15 dark:to-cyan-500/15 rounded-full blur-2xl animate-float-medium"></div>
+
+        {/* Subtle moving lines */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/20 dark:via-blue-500/30 to-transparent animate-slide-right"></div>
+          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/20 dark:via-purple-500/30 to-transparent animate-slide-left"></div>
+          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-pink-400/15 dark:via-pink-500/25 to-transparent animate-slide-right-slow"></div>
+        </div>
+
+        {/* Floating particles */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className={`absolute w-2 h-2 bg-blue-400/30 dark:bg-blue-500/40 rounded-full animate-float-particle-${i % 3}`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${8 + Math.random() * 4}s`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
@@ -201,16 +228,16 @@ export default function PianoApp() {
                 </div>
               </div>
 
-              {/* Sustain Pedal */}
+              {/* Sustain Pedal - Fixed Border Visibility */}
               <div className="space-y-3">
                 <Label className="text-gray-900 dark:text-white font-black">Sustain Pedal</Label>
                 <Button
                   variant={sustainPedal ? "default" : "outline"}
                   onClick={() => setSustainPedal(!sustainPedal)}
-                  className={`w-full transition-all duration-200 font-bold ${
+                  className={`w-full transition-all duration-200 font-bold border-2 ${
                     sustainPedal
-                      ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
-                      : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-white/70 dark:border-gray-600/70 text-gray-900 dark:text-white"
+                      ? "bg-green-500 hover:bg-green-600 text-white shadow-lg border-green-500 hover:border-green-600"
+                      : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400 text-gray-900 dark:text-white"
                   }`}
                 >
                   {sustainPedal ? "ON" : "OFF"}
