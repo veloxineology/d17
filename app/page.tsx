@@ -12,6 +12,7 @@ import PianoKeyboard from "@/components/piano-keyboard"
 import MidiPlayer from "@/components/midi-player"
 import SampleMidis from "@/components/sample-midis"
 import LoadingScreen from "@/components/loading-screen"
+import ThemeToggle from "@/components/theme-toggle"
 import { usePiano } from "@/hooks/use-piano"
 
 export default function PianoApp() {
@@ -106,27 +107,30 @@ export default function PianoApp() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-        {/* Header - iOS 26 Glass Style */}
-        <div className="text-center space-y-4 animate-fade-in">
-          <h1
-            className="text-5xl sm:text-6xl font-black tracking-tight bg-gradient-to-br from-gray-900 via-blue-800 to-purple-900 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
-            style={{
-              textShadow: "0 0 40px rgba(59, 130, 246, 0.3)",
-              filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.2))",
-            }}
-          >
-            D17
-          </h1>
-          <p className="text-xl font-bold bg-gradient-to-r from-gray-600 to-gray-800 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent">
-            Where Notes Fall in Love
-          </p>
+        {/* Header - Left Aligned with Theme Toggle */}
+        <div className="flex items-center justify-between animate-fade-in">
+          <div className="text-left space-y-2">
+            <h1
+              className="text-5xl sm:text-6xl font-black tracking-tight bg-gradient-to-br from-gray-900 via-blue-800 to-purple-900 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
+              style={{
+                textShadow: "0 0 40px rgba(59, 130, 246, 0.3)",
+                filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.2))",
+              }}
+            >
+              D17
+            </h1>
+            <p className="text-xl font-bold bg-gradient-to-r from-gray-600 to-gray-800 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent">
+              Where Notes Fall in Love
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
 
-        {/* Main Controls - iOS 26 Glass Card */}
+        {/* Main Controls - Fixed Button Visibility */}
         <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
           <div className="p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white">Controls</h2>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left">Controls</h2>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-red-500/80 rounded-full backdrop-blur-sm"></div>
                 <div className="w-3 h-3 bg-yellow-500/80 rounded-full backdrop-blur-sm"></div>
@@ -147,7 +151,7 @@ export default function PianoApp() {
                     onValueChange={(value) => setVolume(value[0] / 100)}
                     max={100}
                     step={1}
-                    className="w-full [&_[role=slider]]:glass-button [&_[role=slider]]:bg-blue-500/80 [&_[role=slider]]:border-blue-500/60 [&_[role=slider]]:shadow-lg [&_[role=slider]]:transition-all [&_[role=slider]]:hover:scale-110 [&_[role=slider]]:backdrop-blur-sm"
+                    className="w-full [&_[role=slider]]:bg-blue-500 [&_[role=slider]]:border-blue-500 [&_[role=slider]]:shadow-lg [&_[role=slider]]:transition-all [&_[role=slider]]:hover:scale-110"
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center font-bold">
                     {Math.round(volume * 100)}%
@@ -165,10 +169,10 @@ export default function PianoApp() {
                       variant={selectedOctave === octave ? "default" : "outline"}
                       size="sm"
                       onClick={() => setSelectedOctave(octave)}
-                      className={`flex-1 transition-all duration-200 font-bold glass-button ${
+                      className={`flex-1 transition-all duration-200 font-bold ${
                         selectedOctave === octave
-                          ? "bg-blue-500/80 hover:bg-blue-600/80 text-white shadow-lg scale-105 backdrop-blur-sm"
-                          : "bg-white/30 dark:bg-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-600/50 border-white/40 dark:border-gray-600/40 backdrop-blur-sm"
+                          ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg scale-105"
+                          : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-white/70 dark:border-gray-600/70 text-gray-900 dark:text-white"
                       }`}
                     >
                       {octave}
@@ -183,10 +187,10 @@ export default function PianoApp() {
                 <Button
                   variant={sustainPedal ? "default" : "outline"}
                   onClick={() => setSustainPedal(!sustainPedal)}
-                  className={`w-full transition-all duration-200 font-bold glass-button ${
+                  className={`w-full transition-all duration-200 font-bold ${
                     sustainPedal
-                      ? "bg-green-500/80 hover:bg-green-600/80 text-white shadow-lg backdrop-blur-sm"
-                      : "bg-white/30 dark:bg-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-600/50 border-white/40 dark:border-gray-600/40 backdrop-blur-sm"
+                      ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
+                      : "bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-white/70 dark:border-gray-600/70 text-gray-900 dark:text-white"
                   }`}
                 >
                   {sustainPedal ? "ON" : "OFF"}
@@ -198,7 +202,7 @@ export default function PianoApp() {
                 <Label className="text-gray-900 dark:text-white font-black">Test Audio</Label>
                 <Button
                   onClick={testSound}
-                  className="w-full bg-purple-500/80 hover:bg-purple-600/80 text-white transition-all duration-200 hover:shadow-lg hover:scale-105 font-bold glass-button backdrop-blur-sm"
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white transition-all duration-200 hover:shadow-lg hover:scale-105 font-bold"
                 >
                   <TestTube className="w-4 h-4 mr-2" />
                   Test
@@ -211,6 +215,7 @@ export default function PianoApp() {
         {/* Piano Keyboard */}
         <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
           <div className="p-6 sm:p-8">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left mb-6">Piano Keyboard</h2>
             <PianoKeyboard
               activeNotes={activeNotes}
               onNotePress={pressNote}
@@ -226,7 +231,7 @@ export default function PianoApp() {
         {/* MIDI Player */}
         <div className="glass-card rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
           <div className="p-6 sm:p-8">
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">MIDI Player</h2>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white text-left mb-6">MIDI Player</h2>
 
             {/* File Upload */}
             <div className="space-y-4 mb-6">
@@ -236,11 +241,11 @@ export default function PianoApp() {
                   type="file"
                   accept=".mid,.midi"
                   onChange={handleFileUpload}
-                  className="glass-input bg-white/30 dark:bg-gray-700/30 border-white/40 dark:border-gray-600/40 rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500/50 font-semibold backdrop-blur-sm"
+                  className="bg-white/60 dark:bg-gray-700/60 border-white/70 dark:border-gray-600/70 rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500/50 font-semibold text-gray-900 dark:text-white"
                 />
                 <Button
                   variant="outline"
-                  className="glass-button bg-white/30 dark:bg-gray-700/30 hover:bg-white/50 dark:hover:bg-gray-600/50 border-white/40 dark:border-gray-600/40 rounded-xl transition-all duration-200 sm:w-auto font-bold backdrop-blur-sm"
+                  className="bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 border-white/70 dark:border-gray-600/70 rounded-xl transition-all duration-200 sm:w-auto font-bold text-gray-900 dark:text-white"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   <span className="sm:hidden">Upload</span>
@@ -257,7 +262,7 @@ export default function PianoApp() {
                     <Button
                       onClick={playMidi}
                       disabled={isPlaying}
-                      className="glass-button bg-green-500/80 hover:bg-green-600/80 disabled:bg-gray-300/50 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold backdrop-blur-sm"
+                      className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:text-gray-600 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold"
                     >
                       <Play className="w-4 h-4 mr-2" />
                       Play
@@ -265,14 +270,14 @@ export default function PianoApp() {
                     <Button
                       onClick={pauseMidi}
                       disabled={!isPlaying}
-                      className="glass-button bg-yellow-500/80 hover:bg-yellow-600/80 disabled:bg-gray-300/50 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold backdrop-blur-sm"
+                      className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 disabled:text-gray-600 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold"
                     >
                       <Pause className="w-4 h-4 mr-2" />
                       Pause
                     </Button>
                     <Button
                       onClick={stopMidi}
-                      className="glass-button bg-red-500/80 hover:bg-red-600/80 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold backdrop-blur-sm"
+                      className="bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 flex-1 sm:flex-none font-bold"
                     >
                       <Square className="w-4 h-4 mr-2" />
                       Stop
@@ -286,7 +291,7 @@ export default function PianoApp() {
                   )}
                 </div>
 
-                {/* Scrollable Progress Bar */}
+                {/* Fixed Scrollable Progress Bar */}
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 font-bold font-mono">
                     <span>
@@ -303,26 +308,25 @@ export default function PianoApp() {
                     </span>
                   </div>
 
-                  {/* Scrollable Progress Container */}
-                  <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-white/10 dark:scrollbar-thumb-gray-600/50 dark:scrollbar-track-gray-800/30">
-                    <div className="min-w-full w-max">
+                  {/* Fixed Scrollable Progress Container */}
+                  <div className="w-full overflow-x-auto">
+                    <div style={{ width: "max(100%, 800px)" }}>
                       <div
-                        className="relative w-full h-3 bg-white/20 dark:bg-gray-700/30 rounded-full cursor-pointer transition-all duration-200 hover:h-4 group backdrop-blur-sm border border-white/30 dark:border-gray-600/30"
-                        style={{ minWidth: "800px" }}
+                        className="relative w-full h-3 bg-white/30 dark:bg-gray-700/40 rounded-full cursor-pointer transition-all duration-200 hover:h-4 group border border-white/40 dark:border-gray-600/40"
                         onClick={handleProgressClick}
                       >
                         <div
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500/80 to-purple-500/80 rounded-full transition-all duration-100 shadow-lg backdrop-blur-sm"
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-100 shadow-lg"
                           style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                         >
                           {/* Playhead */}
-                          <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-white/90 rounded-full shadow-lg border-2 border-blue-500/80 opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm"></div>
+                          <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-blue-500 opacity-0 group-hover:opacity-100 transition-all duration-200"></div>
                         </div>
 
                         {/* Progress indicators */}
                         <div className="absolute inset-0 flex justify-between items-center px-2 pointer-events-none">
                           {Array.from({ length: 21 }, (_, i) => (
-                            <div key={i} className="w-px h-2 bg-white/40 dark:bg-gray-500/40 opacity-30"></div>
+                            <div key={i} className="w-px h-2 bg-white/50 dark:bg-gray-500/50 opacity-40"></div>
                           ))}
                         </div>
                       </div>
@@ -330,10 +334,10 @@ export default function PianoApp() {
                   </div>
                 </div>
 
-                {/* Scrollable MIDI Visualizer */}
-                <div className="rounded-2xl overflow-hidden shadow-inner bg-gray-900/80 backdrop-blur-sm border border-white/10">
-                  <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600/50 scrollbar-track-gray-800/30">
-                    <div style={{ minWidth: "1200px" }}>
+                {/* Fixed Scrollable MIDI Visualizer */}
+                <div className="rounded-2xl overflow-hidden shadow-inner bg-gray-900/90 border border-white/20">
+                  <div className="w-full overflow-x-auto">
+                    <div style={{ width: "max(100%, 1200px)", height: "192px" }}>
                       <MidiPlayer
                         midiFile={midiFile}
                         currentTime={currentTime}
@@ -348,9 +352,9 @@ export default function PianoApp() {
           </div>
         </div>
 
-        {/* How to Play - iOS 26 Glass Style */}
+        {/* How to Play - Left Aligned */}
         <div className="space-y-6 animate-fade-in">
-          <h2 className="text-3xl font-black text-center bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-black text-left bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             How to Play
           </h2>
 
@@ -394,8 +398,8 @@ export default function PianoApp() {
                 <div className="text-3xl mb-3" style={{ filter: "drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3))" }}>
                   {item.icon}
                 </div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">{item.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed font-semibold">
+                <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 text-left">{item.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed font-semibold text-left">
                   {item.description}
                 </p>
               </div>
@@ -411,7 +415,7 @@ export default function PianoApp() {
               href="https://instagram.com/kaushikieee"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-500/80 hover:text-blue-600/80 dark:text-blue-400/80 dark:hover:text-blue-300/80 transition-colors duration-200 font-black"
+              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200 font-black"
             >
               Kaushik
             </a>
