@@ -8,12 +8,27 @@ export interface SoundEngineOptions {
 export class SoundEngine {
   private sampler: Tone.Sampler | null = null
   private volume: Tone.Volume
+  private compressor: Tone.Compressor
   private sustainPedal = false
   private sustainedNotes: Set<string> = new Set()
   private isLoaded = false
 
   constructor(options: SoundEngineOptions = {}) {
-    this.volume = new Tone.Volume(Tone.gainToDb(options.volume || 0.7)).toDestination()
+    // Create a compressor for better volume control and dynamics
+    this.compressor = new Tone.Compressor({
+      threshold: -24,
+      ratio: 3,
+      attack: 0.003,
+      release: 0.1,
+    })
+
+    // Increase default volume significantly and use linear gain instead of dB
+    this.volume = new Tone.Volume(6).connect(this.compressor) // +6dB boost
+    this.compressor.toDestination()
+
+    // Set initial volume higher
+    this.setVolume(options.volume || 0.85) // Default to 85% instead of 70%
+
     this.initializeSampler(options.baseUrl || "/audio/salamander/")
   }
 
@@ -75,9 +90,10 @@ export class SoundEngine {
       this.sampler = new Tone.Sampler({
         urls: sampleMap,
         baseUrl: "", // Empty since we're providing full paths
+        volume: 6, // Additional +6dB at sampler level
         onload: () => {
           this.isLoaded = true
-          console.log("Piano samples loaded successfully")
+          console.log("Piano samples loaded successfully with boosted volume")
           console.log("Loaded samples:", Object.keys(sampleMap))
         },
         onerror: (error) => {
@@ -115,9 +131,10 @@ export class SoundEngine {
       this.sampler = new Tone.Sampler({
         urls: oggSampleMap,
         baseUrl: "",
+        volume: 6, // Additional +6dB at sampler level
         onload: () => {
           this.isLoaded = true
-          console.log("Piano samples loaded successfully (.ogg fallback)")
+          console.log("Piano samples loaded successfully (.ogg fallback) with boosted volume")
         },
         onerror: (error) => {
           console.warn("OGG samples also failed, using fallback synth:", error)
@@ -131,7 +148,7 @@ export class SoundEngine {
   }
 
   private createFallbackSynth() {
-    // Create a basic polyphonic synthesizer as fallback
+    // Create a louder, more realistic polyphonic synthesizer as fallback
     const synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: {
         type: "triangle",
@@ -139,9 +156,10 @@ export class SoundEngine {
       envelope: {
         attack: 0.02,
         decay: 0.1,
-        sustain: 0.3,
-        release: 1,
+        sustain: 0.4, // Increased sustain
+        release: 1.2, // Longer release
       },
+      volume: 12, // Much louder fallback synth (+12dB)
     }).connect(this.volume)
 
     // Replace sampler with synth
@@ -150,7 +168,7 @@ export class SoundEngine {
     }
     this.sampler = synth as any
     this.isLoaded = true
-    console.log("Using fallback synthesizer")
+    console.log("Using fallback synthesizer with boosted volume")
   }
 
   async waitForLoad(): Promise<void> {
@@ -212,9 +230,13 @@ export class SoundEngine {
 
       // Convert and validate note to standard format
       const standardNote = this.convertNoteFormat(note)
-      console.log(`Playing note: ${note} -> ${standardNote}`)
 
-      this.sampler.triggerAttack(standardNote, undefined, velocity)
+      // Boost velocity significantly for louder playback
+      const boostedVelocity = Math.min(1.0, velocity * 1.5) // 50% velocity boost
+
+      console.log(`Playing note: ${note} -> ${standardNote} with boosted velocity: ${boostedVelocity}`)
+
+      this.sampler.triggerAttack(standardNote, undefined, boostedVelocity)
 
       if (this.sustainPedal) {
         this.sustainedNotes.add(standardNote)
@@ -254,7 +276,12 @@ export class SoundEngine {
   }
 
   setVolume(volume: number): void {
-    this.volume.volume.value = Tone.gainToDb(Math.max(0.01, volume))
+    // Use linear volume scaling instead of dB for more intuitive control
+    // Map 0-1 range to -20dB to +10dB for much louder output
+    const dbValue = volume * 30 - 20 // Range: -20dB to +10dB
+    this.volume.volume.value = Math.max(-60, dbValue) // Cap minimum at -60dB
+
+    console.log(`Volume set to ${(volume * 100).toFixed(0)}% (${dbValue.toFixed(1)}dB)`)
   }
 
   dispose(): void {
@@ -262,6 +289,7 @@ export class SoundEngine {
       this.sampler.dispose()
     }
     this.volume.dispose()
+    this.compressor.dispose()
   }
 }
 
